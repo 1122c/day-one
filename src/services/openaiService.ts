@@ -1,5 +1,9 @@
 import OpenAI from 'openai';
 
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('Missing OPENAI_API_KEY environment variable');
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -27,7 +31,11 @@ export const generateImage = async (prompt: string) => {
       size: "1024x1024",
     });
 
-    return response.data[0]?.url || '';
+    if (!response.data || response.data.length === 0) {
+      throw new Error('No image generated');
+    }
+
+    return response.data[0].url || '';
   } catch (error) {
     console.error('Error generating image:', error);
     throw error;
