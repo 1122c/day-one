@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile, UserValues } from '@/types/user';
+import { generateBioSuggestion, generateProfileCompletionSuggestions, generateValueInsights } from '@/services/profileEnhancementService';
 
 const onboardingSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -53,14 +54,53 @@ const timeOptions = [
 
 export default function OnboardingFlow() {
   const [step, setStep] = useState(1);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<{
+    bio?: string;
+    insights?: string;
+    suggestions?: string[];
+  }>({});
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
   });
+
+  const generateSuggestions = async (data: Partial<OnboardingFormData>) => {
+    setIsGenerating(true);
+    try {
+      if (data.coreValues && data.personalGoals && data.preferredCommunication) {
+        const values: UserValues = {
+          coreValues: data.coreValues,
+          personalGoals: data.personalGoals,
+          preferredCommunication: data.preferredCommunication,
+          availability: {
+            timezone: data.timezone || 'UTC',
+            preferredTimes: data.preferredTimes || [],
+          },
+        };
+
+        const [bioSuggestion, insights] = await Promise.all([
+          generateBioSuggestion(values),
+          generateValueInsights(values),
+        ]);
+
+        setAiSuggestions({
+          bio: bioSuggestion,
+          insights,
+        });
+      }
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const onSubmit = async (data: OnboardingFormData) => {
     // TODO: Save user profile to Firebase
@@ -98,6 +138,19 @@ export default function OnboardingFlow() {
               />
               {errors.bio && (
                 <p className="mt-2 text-sm text-red-600">{errors.bio.message}</p>
+              )}
+              {aiSuggestions.bio && (
+                <div className="mt-2 p-4 bg-indigo-50 rounded-md">
+                  <p className="text-sm text-indigo-700 font-medium mb-2">AI Suggestion:</p>
+                  <p className="text-sm text-indigo-600">{aiSuggestions.bio}</p>
+                  <button
+                    type="button"
+                    onClick={() => setValue('bio', aiSuggestions.bio || '')}
+                    className="mt-2 text-sm text-indigo-600 hover:text-indigo-800"
+                  >
+                    Use this suggestion
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -263,41 +316,47 @@ export default function OnboardingFlow() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2 }}
             >
               {renderStep()}
             </motion.div>
           </AnimatePresence>
 
-          <div className="mt-8 flex justify-between">
+          <div className="flex justify-between">
             {step > 1 && (
               <button
                 type="button"
                 onClick={() => setStep(step - 1)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
               >
-                Previous
+                Back
               </button>
             )}
             {step < 4 ? (
               <button
                 type="button"
-                onClick={() => setStep(step + 1)}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                onClick={() => {
+                  const currentData = watch();
+                  if (step === 2) {
+                    generateSuggestions(currentData);
+                  }
+                  setStep(step + 1);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
               >
                 Next
               </button>
             ) : (
               <button
                 type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
               >
                 Complete Profile
               </button>
@@ -305,6 +364,15 @@ export default function OnboardingFlow() {
           </div>
         </form>
       </div>
+
+      {isGenerating && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-lg">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto" />
+            <p className="mt-2 text-sm text-gray-600">Generating suggestions...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
