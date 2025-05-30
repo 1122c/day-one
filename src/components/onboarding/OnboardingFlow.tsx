@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserProfile, UserValues } from '@/types/user';
+import { UserProfile, UserValues, SocialProfile } from '@/types/user';
 import { generateBioSuggestion, generateProfileCompletionSuggestions, generateValueInsights } from '@/services/profileEnhancementService';
+import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiX, FiEye } from 'react-icons/fi';
 
 const onboardingSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -14,6 +15,11 @@ const onboardingSchema = z.object({
   preferredCommunication: z.array(z.string()).min(1, 'Select at least 1 communication preference'),
   timezone: z.string(),
   preferredTimes: z.array(z.string()).min(1, 'Select at least 1 preferred time'),
+  socialProfiles: z.array(z.object({
+    platform: z.enum(['linkedin', 'twitter', 'instagram', 'tiktok']),
+    url: z.string().url('Please enter a valid URL').optional(),
+    username: z.string().min(1, 'Username is required'),
+  })).optional(),
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
@@ -60,6 +66,7 @@ export default function OnboardingFlow() {
     insights?: string;
     suggestions?: string[];
   }>({});
+  const [previewProfile, setPreviewProfile] = useState<number | null>(null);
 
   const {
     register,
@@ -67,9 +74,68 @@ export default function OnboardingFlow() {
     formState: { errors },
     watch,
     setValue,
+    control,
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
+    defaultValues: {
+      socialProfiles: [
+        { platform: 'linkedin', username: '', url: '' },
+        { platform: 'twitter', username: '', url: '' },
+        { platform: 'instagram', username: '', url: '' },
+        { platform: 'tiktok', username: '', url: '' },
+      ],
+    },
   });
+
+  const { fields, remove } = useFieldArray({
+    control,
+    name: 'socialProfiles',
+  });
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform) {
+      case 'linkedin':
+        return <FiLinkedin className="h-6 w-6 text-blue-600" />;
+      case 'twitter':
+        return <FiTwitter className="h-6 w-6 text-sky-600" />;
+      case 'instagram':
+        return <FiInstagram className="h-6 w-6 text-pink-600" />;
+      case 'tiktok':
+        return <FiMusic className="h-6 w-6 text-black" />;
+      default:
+        return null;
+    }
+  };
+
+  const getPlatformColor = (platform: string) => {
+    switch (platform) {
+      case 'linkedin':
+        return 'bg-blue-100';
+      case 'twitter':
+        return 'bg-sky-100';
+      case 'instagram':
+        return 'bg-pink-100';
+      case 'tiktok':
+        return 'bg-gray-100';
+      default:
+        return 'bg-gray-100';
+    }
+  };
+
+  const getPlatformUrl = (platform: string, username: string) => {
+    switch (platform) {
+      case 'linkedin':
+        return `https://linkedin.com/in/${username}`;
+      case 'twitter':
+        return `https://twitter.com/${username}`;
+      case 'instagram':
+        return `https://instagram.com/${username}`;
+      case 'tiktok':
+        return `https://tiktok.com/@${username}`;
+      default:
+        return '';
+    }
+  };
 
   const generateSuggestions = async (data: Partial<OnboardingFormData>) => {
     setIsGenerating(true);
@@ -271,6 +337,123 @@ export default function OnboardingFlow() {
             </div>
           </div>
         );
+      case 5:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Social Profiles (Optional)</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Add your social profiles to help others connect with you.
+              </p>
+              
+              <div className="space-y-6">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="relative">
+                    <div className="flex items-start space-x-4">
+                      <div className={`p-2 rounded-lg ${getPlatformColor(field.platform)}`}>
+                        {getPlatformIcon(field.platform)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 capitalize">
+                            {field.platform} Profile
+                          </label>
+                          <div className="flex space-x-2">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewProfile(index)}
+                              className="text-gray-400 hover:text-gray-600"
+                              title="Preview Profile"
+                            >
+                              <FiEye className="h-5 w-5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => remove(index)}
+                              className="text-gray-400 hover:text-red-600"
+                              title="Remove Profile"
+                            >
+                              <FiX className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            placeholder="Username"
+                            {...register(`socialProfiles.${index}.username`)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                          <input
+                            type="url"
+                            placeholder="Profile URL (optional)"
+                            {...register(`socialProfiles.${index}.url`)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview Modal */}
+                    {previewProfile === index && (
+                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                          <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 capitalize">
+                              {field.platform} Profile Preview
+                            </h3>
+                            <button
+                              onClick={() => setPreviewProfile(null)}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <FiX className="h-5 w-5" />
+                            </button>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-2 rounded-lg ${getPlatformColor(field.platform)}`}>
+                                {getPlatformIcon(field.platform)}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">
+                                  @{watch(`socialProfiles.${index}.username`)}
+                                </p>
+                                <a
+                                  href={getPlatformUrl(field.platform, watch(`socialProfiles.${index}.username`))}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-indigo-600 hover:text-indigo-800"
+                                >
+                                  View Profile
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentProfiles = watch('socialProfiles') || [];
+                    if (currentProfiles.length < 4) {
+                      setValue('socialProfiles', [
+                        ...currentProfiles,
+                        { platform: 'linkedin', username: '', url: '' },
+                      ]);
+                    }
+                  }}
+                  className="mt-4 w-full px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
+                >
+                  Add Another Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -288,11 +471,11 @@ export default function OnboardingFlow() {
       <div className="bg-white shadow rounded-lg p-6">
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            {[1, 2, 3, 4].map((s) => (
+            {[1, 2, 3, 4, 5].map((s) => (
               <div
                 key={s}
                 className={`flex items-center ${
-                  s !== 4 ? 'flex-1' : ''
+                  s !== 5 ? 'flex-1' : ''
                 }`}
               >
                 <div
@@ -304,7 +487,7 @@ export default function OnboardingFlow() {
                 >
                   {s}
                 </div>
-                {s !== 4 && (
+                {s !== 5 && (
                   <div
                     className={`flex-1 h-1 mx-4 ${
                       s < step ? 'bg-indigo-600' : 'bg-gray-200'
@@ -339,7 +522,7 @@ export default function OnboardingFlow() {
                 Back
               </button>
             )}
-            {step < 4 ? (
+            {step < 5 ? (
               <button
                 type="button"
                 onClick={() => {
