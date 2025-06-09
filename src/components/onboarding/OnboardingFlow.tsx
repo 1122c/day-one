@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile, UserValues, SocialProfile } from '@/types/user';
 import { generateBioSuggestion, generateProfileCompletionSuggestions, generateValueInsights } from '@/services/profileEnhancementService';
-import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiX, FiEye } from 'react-icons/fi';
+import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiX, FiEye, FiHeart } from 'react-icons/fi';
 
 const onboardingSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -16,7 +16,7 @@ const onboardingSchema = z.object({
   timezone: z.string(),
   preferredTimes: z.array(z.string()).min(1, 'Select at least 1 preferred time'),
   socialProfiles: z.array(z.object({
-    platform: z.enum(['linkedin', 'twitter', 'instagram', 'tiktok']),
+    platform: z.enum(['linkedin', 'twitter', 'instagram', 'tiktok', 'onlyfans']),
     url: z.string().url('Please enter a valid URL').optional(),
     username: z.string().min(1, 'Username is required'),
   })).optional(),
@@ -75,6 +75,7 @@ export default function OnboardingFlow() {
     watch,
     setValue,
     control,
+    trigger,
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
@@ -102,6 +103,8 @@ export default function OnboardingFlow() {
         return <FiInstagram className="h-6 w-6 text-pink-600" />;
       case 'tiktok':
         return <FiMusic className="h-6 w-6 text-black" />;
+      case 'onlyfans':
+        return <FiHeart className="h-6 w-6 text-pink-500" />;
       default:
         return null;
     }
@@ -117,6 +120,8 @@ export default function OnboardingFlow() {
         return 'bg-pink-100';
       case 'tiktok':
         return 'bg-gray-100';
+      case 'onlyfans':
+        return 'bg-pink-50';
       default:
         return 'bg-gray-100';
     }
@@ -132,6 +137,8 @@ export default function OnboardingFlow() {
         return `https://instagram.com/${username}`;
       case 'tiktok':
         return `https://tiktok.com/@${username}`;
+      case 'onlyfans':
+        return `https://onlyfans.com/${username}`;
       default:
         return '';
     }
@@ -525,12 +532,23 @@ export default function OnboardingFlow() {
             {step < 5 ? (
               <button
                 type="button"
-                onClick={() => {
-                  const currentData = watch();
-                  if (step === 2) {
-                    generateSuggestions(currentData);
+                onClick={async () => {
+                  let valid = false;
+                  if (step === 1) {
+                    valid = await trigger(['name', 'bio']);
+                  } else if (step === 2) {
+                    valid = await trigger(['coreValues']);
+                  } else if (step === 3) {
+                    valid = await trigger(['personalGoals']);
+                  } else if (step === 4) {
+                    valid = await trigger(['preferredCommunication', 'timezone', 'preferredTimes']);
                   }
-                  setStep(step + 1);
+                  if (valid) {
+                    if (step === 2) {
+                      generateSuggestions(watch());
+                    }
+                    setStep(step + 1);
+                  }
                 }}
                 className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
               >

@@ -1,3 +1,4 @@
+import 'openai/shims/node';
 import OpenAI from 'openai';
 
 if (!process.env.OPENAI_API_KEY) {

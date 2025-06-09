@@ -1,5 +1,5 @@
 export type SocialProfile = {
-  platform: 'linkedin' | 'github' | 'twitter';
+  platform: 'linkedin' | 'github' | 'twitter' | 'instagram' | 'tiktok' | 'onlyfans';
   url: string;
   username: string;
 };
