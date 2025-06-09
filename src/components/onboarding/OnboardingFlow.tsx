@@ -5,7 +5,12 @@ import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile, UserValues, SocialProfile } from '@/types/user';
 import { generateBioSuggestion, generateProfileCompletionSuggestions, generateValueInsights } from '@/services/profileEnhancementService';
-import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiX, FiEye, FiHeart } from 'react-icons/fi';
+import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiX, FiEye, FiHeart, FiCheck } from 'react-icons/fi';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
+import { saveUserProfile } from '@/services/firebaseService';
+import { useRouter } from 'next/router';
+import ProfileReview from './ProfileReview';
 
 const onboardingSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -59,14 +64,20 @@ const timeOptions = [
 ];
 
 export default function OnboardingFlow() {
+  const [user] = useAuthState(auth);
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<{
     bio?: string;
     insights?: string;
     suggestions?: string[];
   }>({});
   const [previewProfile, setPreviewProfile] = useState<number | null>(null);
+  const [reviewData, setReviewData] = useState<Partial<UserProfile> | null>(null);
 
   const {
     register,
@@ -176,8 +187,56 @@ export default function OnboardingFlow() {
   };
 
   const onSubmit = async (data: OnboardingFormData) => {
-    // TODO: Save user profile to Firebase
-    console.log(data);
+    if (!user) {
+      setSubmitError('You must be logged in to save your profile');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const userProfile: Partial<UserProfile> = {
+        id: user.uid,
+        email: user.email || '',
+        name: data.name,
+        bio: data.bio,
+        socialProfiles: data.socialProfiles?.map(profile => ({
+          ...profile,
+          url: profile.url || getPlatformUrl(profile.platform, profile.username)
+        })),
+        values: {
+          coreValues: data.coreValues,
+          personalGoals: data.personalGoals,
+          preferredCommunication: data.preferredCommunication,
+          availability: {
+            timezone: data.timezone,
+            preferredTimes: data.preferredTimes,
+          },
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await saveUserProfile(user.uid, userProfile);
+      setSubmitSuccess(true);
+      
+      // Redirect to home page after a short delay
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setSubmitError('Failed to save profile. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    if (reviewData) {
+      await onSubmit(reviewData as any);
+    }
   };
 
   const renderStep = () => {
@@ -461,6 +520,15 @@ export default function OnboardingFlow() {
             </div>
           </div>
         );
+      case 6:
+        return (
+          <ProfileReview
+            profile={reviewData!}
+            onEdit={() => setStep(5)}
+            onSubmit={handleReviewSubmit}
+            isSubmitting={isSubmitting}
+          />
+        );
       default:
         return null;
     }
@@ -475,102 +543,141 @@ export default function OnboardingFlow() {
         </p>
       </div>
 
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            {[1, 2, 3, 4, 5].map((s) => (
-              <div
-                key={s}
-                className={`flex items-center ${
-                  s !== 5 ? 'flex-1' : ''
-                }`}
-              >
+      {submitSuccess ? (
+        <div className="bg-white shadow rounded-lg p-6 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-green-100 p-3">
+              <FiCheck className="h-8 w-8 text-green-600" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Profile Created Successfully!</h2>
+          <p className="text-gray-600">Redirecting you to the home page...</p>
+        </div>
+      ) : (
+        <div className="bg-white shadow rounded-lg p-6">
+          {submitError && (
+            <div className="mb-6 p-4 bg-red-50 rounded-md">
+              <p className="text-sm text-red-600">{submitError}</p>
+            </div>
+          )}
+
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              {[1, 2, 3, 4, 5, 6].map((s) => (
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                    s <= step
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 text-gray-600'
+                  key={s}
+                  className={`flex items-center ${
+                    s !== 6 ? 'flex-1' : ''
                   }`}
                 >
-                  {s}
-                </div>
-                {s !== 5 && (
                   <div
-                    className={`flex-1 h-1 mx-4 ${
-                      s < step ? 'bg-indigo-600' : 'bg-gray-200'
+                    className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                      s <= step
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-600'
                     }`}
-                  />
+                  >
+                    {s}
+                  </div>
+                  {s !== 6 && (
+                    <div
+                      className={`flex-1 h-1 mx-4 ${
+                        s < step ? 'bg-indigo-600' : 'bg-gray-200'
+                      }`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {renderStep()}
+              </motion.div>
+            </AnimatePresence>
+
+            {step < 6 && (
+              <div className="flex justify-between">
+                {step > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep(step - 1)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    disabled={isSubmitting}
+                  >
+                    Back
+                  </button>
                 )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              {renderStep()}
-            </motion.div>
-          </AnimatePresence>
-
-          <div className="flex justify-between">
-            {step > 1 && (
-              <button
-                type="button"
-                onClick={() => setStep(step - 1)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Back
-              </button>
-            )}
-            {step < 5 ? (
-              <button
-                type="button"
-                onClick={async () => {
-                  let valid = false;
-                  if (step === 1) {
-                    valid = await trigger(['name', 'bio']);
-                  } else if (step === 2) {
-                    valid = await trigger(['coreValues']);
-                  } else if (step === 3) {
-                    valid = await trigger(['personalGoals']);
-                  } else if (step === 4) {
-                    valid = await trigger(['preferredCommunication', 'timezone', 'preferredTimes']);
-                  }
-                  if (valid) {
-                    if (step === 2) {
-                      generateSuggestions(watch());
+                <button
+                  type="button"
+                  onClick={async () => {
+                    let valid = false;
+                    if (step === 1) {
+                      valid = await trigger(['name', 'bio']);
+                    } else if (step === 2) {
+                      valid = await trigger(['coreValues']);
+                    } else if (step === 3) {
+                      valid = await trigger(['personalGoals']);
+                    } else if (step === 4) {
+                      valid = await trigger(['preferredCommunication', 'timezone', 'preferredTimes']);
+                    } else if (step === 5) {
+                      valid = await trigger(['socialProfiles']);
+                      if (valid) {
+                        const formData = watch();
+                        setReviewData({
+                          id: user?.uid,
+                          email: user?.email || '',
+                          name: formData.name,
+                          bio: formData.bio,
+                          socialProfiles: formData.socialProfiles?.map(profile => ({
+                            ...profile,
+                            url: profile.url || getPlatformUrl(profile.platform, profile.username)
+                          })),
+                          values: {
+                            coreValues: formData.coreValues,
+                            personalGoals: formData.personalGoals,
+                            preferredCommunication: formData.preferredCommunication,
+                            availability: {
+                              timezone: formData.timezone,
+                              preferredTimes: formData.preferredTimes,
+                            },
+                          },
+                        });
+                      }
                     }
-                    setStep(step + 1);
-                  }
-                }}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-              >
-                Complete Profile
-              </button>
+                    if (valid) {
+                      if (step === 2) {
+                        generateSuggestions(watch());
+                      }
+                      setStep(step + 1);
+                    }
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                  disabled={isSubmitting}
+                >
+                  Next
+                </button>
+              </div>
             )}
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
 
-      {isGenerating && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      {(isGenerating || isSubmitting) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto" />
-            <p className="mt-2 text-sm text-gray-600">Generating suggestions...</p>
+            <p className="mt-2 text-sm text-gray-600">
+              {isGenerating ? 'Generating suggestions...' : 'Saving your profile...'}
+            </p>
           </div>
         </div>
       )}

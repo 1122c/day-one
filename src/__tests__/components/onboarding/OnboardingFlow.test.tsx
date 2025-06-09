@@ -2,14 +2,32 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
+import { auth } from '@/lib/firebase';
+import { saveUserProfile } from '@/services/firebaseService';
 
-jest.mock('@/services/openaiService', () => ({
-  generateResponse: jest.fn().mockResolvedValue('Mocked response'),
-  generateImage: jest.fn().mockResolvedValue('mocked-image-url'),
+// Mock Firebase auth
+jest.mock('react-firebase-hooks/auth', () => ({
+  useAuthState: () => [null, false],
+}));
+
+// Mock Firebase services
+jest.mock('@/services/firebaseService', () => ({
+  saveUserProfile: jest.fn(),
+}));
+
+// Mock Next.js router
+jest.mock('next/router', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
 }));
 
 describe('OnboardingFlow', () => {
-  // Helper to fill required fields for each step, re-querying checkboxes after each step
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  // Helper to fill required fields for each step
   async function fillRequiredFieldsAndGoToStep(step: number) {
     // Step 1: Name & Bio
     if (step > 1) {
@@ -47,6 +65,13 @@ describe('OnboardingFlow', () => {
       fireEvent.click(timeCheckboxes[timeCheckboxes.length - 1]);
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
     }
+    // Step 5: Social Profiles
+    if (step > 5) {
+      await waitFor(() => expect(screen.getByText(/social profiles/i)).toBeInTheDocument());
+      const usernameInputs = screen.getAllByPlaceholderText(/username/i);
+      fireEvent.change(usernameInputs[0], { target: { value: 'testuser' } });
+      fireEvent.click(screen.getByRole('button', { name: /next/i }));
+    }
   }
 
   it('renders the first step with name and bio fields', () => {
@@ -57,34 +82,32 @@ describe('OnboardingFlow', () => {
 
   it('validates required fields', async () => {
     render(<OnboardingFlow />);
-    // Try to go to next step without filling fields (should still be on step 1)
+    // Try to go to next step without filling fields
     fireEvent.click(screen.getByRole('button', { name: /next/i }));
-    // Use findByText for error messages
     expect(await screen.findByText(/name must be at least 2 characters/i)).toBeInTheDocument();
     expect(await screen.findByText(/bio must be at least 10 characters/i)).toBeInTheDocument();
   });
 
   it('allows adding and removing social profiles', async () => {
     render(<OnboardingFlow />);
-    await fillRequiredFieldsAndGoToStep(5); // Step 5 is social profiles
-    // There should be at least one social profile input
-    // Try to match the heading robustly, fallback to username input presence
-    const heading = screen.queryByText((content, node) =>
-      node?.tagName.toLowerCase() === 'h3' && content.toLowerCase().includes('social profiles')
-    );
-    let usernameInputs: HTMLElement[] = [];
-    await waitFor(() => {
-      usernameInputs = screen.queryAllByPlaceholderText(/username/i);
-      expect(heading || usernameInputs.length > 0).toBeTruthy();
-    });
-    // Remove a profile (if any remove button exists)
-    const removeButtons = screen.queryAllByTitle(/remove profile/i);
+    await fillRequiredFieldsAndGoToStep(5);
+    
+    // Verify social profiles section is rendered
+    expect(screen.getByText(/social profiles/i)).toBeInTheDocument();
+    
+    // Check initial social profile fields
+    const usernameInputs = screen.getAllByPlaceholderText(/username/i);
+    expect(usernameInputs.length).toBeGreaterThan(0);
+    
+    // Remove a profile
+    const removeButtons = screen.getAllByTitle(/remove profile/i);
     if (removeButtons.length > 0) {
       fireEvent.click(removeButtons[0]);
       await waitFor(() => {
-        expect(screen.queryAllByTitle(/remove profile/i).length).toBeLessThan(removeButtons.length);
+        expect(screen.getAllByPlaceholderText(/username/i).length).toBeLessThan(usernameInputs.length);
       });
     }
+    
     // Add a new profile
     const addButton = screen.getByRole('button', { name: /add another profile/i });
     fireEvent.click(addButton);
@@ -96,17 +119,110 @@ describe('OnboardingFlow', () => {
   it('handles social profile preview', async () => {
     render(<OnboardingFlow />);
     await fillRequiredFieldsAndGoToStep(5);
-    // Click preview button if it exists
-    const previewButtons = screen.queryAllByTitle(/preview profile/i);
-    if (previewButtons.length > 0) {
-      fireEvent.click(previewButtons[0]);
-      expect(screen.getByText(/profile preview/i)).toBeInTheDocument();
-      // Close preview
-      const closeButton = screen.getByRole('button', { name: /close/i });
-      fireEvent.click(closeButton);
-      await waitFor(() => {
-        expect(screen.queryByText(/profile preview/i)).not.toBeInTheDocument();
-      });
-    }
+    
+    // Fill in a social profile
+    const usernameInput = screen.getAllByPlaceholderText(/username/i)[0];
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
+    
+    // Click preview button
+    const previewButtons = screen.getAllByTitle(/preview profile/i);
+    fireEvent.click(previewButtons[0]);
+    
+    // Verify preview modal
+    expect(screen.getByText(/profile preview/i)).toBeInTheDocument();
+    expect(screen.getByText(/@testuser/i)).toBeInTheDocument();
+    
+    // Close preview
+    const closeButton = screen.getByRole('button', { name: /close/i });
+    fireEvent.click(closeButton);
+    await waitFor(() => {
+      expect(screen.queryByText(/profile preview/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('validates social profile URLs', async () => {
+    render(<OnboardingFlow />);
+    await fillRequiredFieldsAndGoToStep(5);
+    
+    // Fill in an invalid URL
+    const urlInputs = screen.getAllByPlaceholderText(/profile url/i);
+    fireEvent.change(urlInputs[0], { target: { value: 'invalid-url' } });
+    
+    // Try to submit
+    fireEvent.click(screen.getByRole('button', { name: /next/i }));
+    expect(await screen.findByText(/please enter a valid url/i)).toBeInTheDocument();
+  });
+
+  it('shows review step with all entered information', async () => {
+    render(<OnboardingFlow />);
+    await fillRequiredFieldsAndGoToStep(6);
+    
+    // Verify review step content
+    expect(screen.getByText(/review your profile/i)).toBeInTheDocument();
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('This is a test bio for onboarding.')).toBeInTheDocument();
+    expect(screen.getByText(/@testuser/i)).toBeInTheDocument();
+  });
+
+  it('allows editing from review step', async () => {
+    render(<OnboardingFlow />);
+    await fillRequiredFieldsAndGoToStep(6);
+    
+    // Click edit button
+    fireEvent.click(screen.getByRole('button', { name: /edit profile/i }));
+    
+    // Verify we're back at social profiles step
+    expect(screen.getByText(/social profiles/i)).toBeInTheDocument();
+  });
+
+  it('shows loading state during submission', async () => {
+    render(<OnboardingFlow />);
+    await fillRequiredFieldsAndGoToStep(6);
+    
+    // Mock successful profile save
+    (saveUserProfile as jest.Mock).mockResolvedValueOnce(undefined);
+    
+    // Submit form
+    fireEvent.click(screen.getByRole('button', { name: /complete profile/i }));
+    
+    // Verify loading state
+    expect(screen.getByText(/saving/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
+    
+    // Wait for submission to complete
+    await waitFor(() => {
+      expect(screen.getByText(/profile created successfully/i)).toBeInTheDocument();
+    });
+  });
+
+  it('handles submission errors', async () => {
+    render(<OnboardingFlow />);
+    await fillRequiredFieldsAndGoToStep(6);
+    
+    // Mock failed profile save
+    (saveUserProfile as jest.Mock).mockRejectedValueOnce(new Error('Save failed'));
+    
+    // Submit form
+    fireEvent.click(screen.getByRole('button', { name: /complete profile/i }));
+    
+    // Verify error message
+    await waitFor(() => {
+      expect(screen.getByText(/failed to save profile/i)).toBeInTheDocument();
+    });
+  });
+
+  it('disables navigation buttons during submission', async () => {
+    render(<OnboardingFlow />);
+    await fillRequiredFieldsAndGoToStep(6);
+    
+    // Mock long-running save
+    (saveUserProfile as jest.Mock).mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+    
+    // Submit form
+    fireEvent.click(screen.getByRole('button', { name: /complete profile/i }));
+    
+    // Verify all buttons are disabled
+    expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /edit profile/i })).toBeDisabled();
   });
 }); 
