@@ -5,12 +5,16 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getMatchesForUser } from '@/services/matchingService';
+import { createNotification } from '@/services/notificationService';
+import ChatWindow from '../chat/ChatWindow';
+import { FiMessageSquare } from 'react-icons/fi';
 
 export default function MatchList() {
   const [user] = useAuthState(auth);
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
   useEffect(() => {
     async function loadMatches() {
@@ -38,6 +42,24 @@ export default function MatchList() {
         status: action === 'accept' ? 'accepted' : 'rejected',
         updatedAt: new Date(),
       });
+
+      // Create notification for the other user
+      const match = matches.find(m => m.id === matchId);
+      if (match) {
+        const otherUserId = match.userIds.find(id => id !== user.uid);
+        if (otherUserId) {
+          await createNotification({
+            userId: otherUserId,
+            type: 'match',
+            title: action === 'accept' ? 'Match Accepted!' : 'Match Declined',
+            message: action === 'accept' 
+              ? `${user.displayName || 'Someone'} has accepted your match request!`
+              : `${user.displayName || 'Someone'} has declined your match request.`,
+            data: { matchId },
+            read: false
+          });
+        }
+      }
 
       setMatches((prevMatches) =>
         prevMatches.map((match) =>
@@ -80,121 +102,140 @@ export default function MatchList() {
   }
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      <AnimatePresence>
-        {matches.map((match) => (
-          <motion.div
-            key={match.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white shadow rounded-lg overflow-hidden"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Match Score: {match.matchScore}%
-                </h3>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    match.status === 'pending'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : match.status === 'accepted'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  {match.status}
-                </span>
-              </div>
+    <>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <AnimatePresence>
+          {matches.map((match) => (
+            <motion.div
+              key={match.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white shadow rounded-lg overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Match Score: {match.matchScore}%
+                  </h3>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      match.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : match.status === 'accepted'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {match.status}
+                  </span>
+                </div>
 
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">
-                    Compatibility Factors
-                  </h4>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center">
-                      <span className="w-24 text-sm text-gray-600">
-                        Values Alignment
-                      </span>
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full">
-                        <div
-                          className="h-2 bg-indigo-600 rounded-full"
-                          style={{
-                            width: `${match.compatibilityFactors.valuesAlignment}%`,
-                          }}
-                        />
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">
+                      Compatibility Factors
+                    </h4>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center">
+                        <span className="w-24 text-sm text-gray-600">
+                          Values Alignment
+                        </span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full">
+                          <div
+                            className="h-2 bg-indigo-600 rounded-full"
+                            style={{
+                              width: `${match.compatibilityFactors.valuesAlignment}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="ml-2 text-sm text-gray-600">
+                          {match.compatibilityFactors.valuesAlignment}%
+                        </span>
                       </div>
-                      <span className="ml-2 text-sm text-gray-600">
-                        {match.compatibilityFactors.valuesAlignment}%
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="w-24 text-sm text-gray-600">
-                        Goals Alignment
-                      </span>
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full">
-                        <div
-                          className="h-2 bg-indigo-600 rounded-full"
-                          style={{
-                            width: `${match.compatibilityFactors.goalsAlignment}%`,
-                          }}
-                        />
+                      <div className="flex items-center">
+                        <span className="w-24 text-sm text-gray-600">
+                          Goals Alignment
+                        </span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full">
+                          <div
+                            className="h-2 bg-indigo-600 rounded-full"
+                            style={{
+                              width: `${match.compatibilityFactors.goalsAlignment}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="ml-2 text-sm text-gray-600">
+                          {match.compatibilityFactors.goalsAlignment}%
+                        </span>
                       </div>
-                      <span className="ml-2 text-sm text-gray-600">
-                        {match.compatibilityFactors.goalsAlignment}%
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="w-24 text-sm text-gray-600">
-                        Communication
-                      </span>
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full">
-                        <div
-                          className="h-2 bg-indigo-600 rounded-full"
-                          style={{
-                            width: `${match.compatibilityFactors.communicationStyle}%`,
-                          }}
-                        />
+                      <div className="flex items-center">
+                        <span className="w-24 text-sm text-gray-600">
+                          Communication
+                        </span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full">
+                          <div
+                            className="h-2 bg-indigo-600 rounded-full"
+                            style={{
+                              width: `${match.compatibilityFactors.communicationStyle}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="ml-2 text-sm text-gray-600">
+                          {match.compatibilityFactors.communicationStyle}%
+                        </span>
                       </div>
-                      <span className="ml-2 text-sm text-gray-600">
-                        {match.compatibilityFactors.communicationStyle}%
-                      </span>
                     </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">
+                      Match Reason
+                    </h4>
+                    <p className="mt-2 text-sm text-gray-600">
+                      {match.matchReason}
+                    </p>
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">
-                    Match Reason
-                  </h4>
-                  <p className="mt-2 text-sm text-gray-600">
-                    {match.matchReason}
-                  </p>
+                <div className="mt-6 flex space-x-3">
+                  {match.status === 'pending' ? (
+                    <>
+                      <button
+                        onClick={() => handleMatchAction(match.id, 'reject')}
+                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        Not Interested
+                      </button>
+                      <button
+                        onClick={() => handleMatchAction(match.id, 'accept')}
+                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        Connect
+                      </button>
+                    </>
+                  ) : match.status === 'accepted' ? (
+                    <button
+                      onClick={() => setSelectedMatch(match)}
+                      className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      <FiMessageSquare className="h-5 w-5 mr-2" />
+                      Message
+                    </button>
+                  ) : null}
                 </div>
               </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
-              {match.status === 'pending' && (
-                <div className="mt-6 flex space-x-3">
-                  <button
-                    onClick={() => handleMatchAction(match.id, 'reject')}
-                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Not Interested
-                  </button>
-                  <button
-                    onClick={() => handleMatchAction(match.id, 'accept')}
-                    className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Connect
-                  </button>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
+      {selectedMatch && (
+        <ChatWindow
+          match={selectedMatch}
+          onClose={() => setSelectedMatch(null)}
+        />
+      )}
+    </>
   );
 } 

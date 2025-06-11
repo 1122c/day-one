@@ -1,10 +1,10 @@
-export type SocialProfile = {
-  platform: 'linkedin' | 'github' | 'twitter' | 'instagram' | 'tiktok' | 'onlyfans';
-  url: string;
+export interface SocialProfile {
+  platform: 'linkedin' | 'twitter' | 'instagram' | 'tiktok' | 'onlyfans';
   username: string;
-};
+  url?: string;
+}
 
-export type UserValues = {
+export interface UserValues {
   coreValues: string[];
   personalGoals: string[];
   preferredCommunication: string[];
@@ -12,21 +12,27 @@ export type UserValues = {
     timezone: string;
     preferredTimes: string[];
   };
-};
+}
 
-export type UserProfile = {
+export interface UserProfile {
   id: string;
   email: string;
   name: string;
   bio: string;
-  photoURL?: string;
   socialProfiles?: SocialProfile[];
   values: UserValues;
   createdAt: Date;
   updatedAt: Date;
-};
+  privacy: {
+    profileVisibility: 'public' | 'matches' | 'private';
+    showEmail: boolean;
+    showSocialProfiles: boolean;
+    allowMessaging: boolean;
+    showOnlineStatus: boolean;
+  };
+}
 
-export type Match = {
+export interface Match {
   id: string;
   userIds: string[];
   matchScore: number;
@@ -38,7 +44,7 @@ export type Match = {
   matchReason: string;
   createdAt: Date;
   status: 'pending' | 'accepted' | 'rejected';
-};
+}
 
 export type Connection = {
   id: string;
