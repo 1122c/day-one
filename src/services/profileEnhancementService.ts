@@ -1,17 +1,25 @@
 import { UserProfile, UserValues } from '@/types/user';
-import { generateResponse } from './openaiService';
+
+const callOpenAI = async (type: string, data: any) => {
+  const response = await fetch('/api/openai', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ type, data }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API failed: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  return result.result;
+};
 
 export const generateBioSuggestion = async (values: UserValues): Promise<string> => {
-  const prompt = `Create a professional and engaging bio based on these values and goals:
-    Core Values: ${values.coreValues.join(', ')}
-    Personal Goals: ${values.personalGoals.join(', ')}
-    Communication Style: ${values.preferredCommunication.join(', ')}
-    
-    The bio should be concise (max 200 characters), professional, and highlight the person's values and goals.`;
-
   try {
-    const suggestion = await generateResponse(prompt);
-    return suggestion;
+    return await callOpenAI('bio', { values });
   } catch (error) {
     console.error('Error generating bio suggestion:', error);
     throw error;
@@ -37,7 +45,7 @@ export const generateBioSuggestions = async (userProfile: UserProfile): Promise<
     Format each suggestion on a new line.`;
 
   try {
-    const response = await generateResponse(prompt);
+    const response = await callOpenAI('text', { prompt });
     return response.split('\n').filter(Boolean);
   } catch (error) {
     console.error('Error generating bio suggestions:', error);
@@ -46,27 +54,9 @@ export const generateBioSuggestions = async (userProfile: UserProfile): Promise<
 };
 
 export const generateProfileCompletionSuggestions = async (userProfile: UserProfile): Promise<string[]> => {
-  const prompt = `Analyze this user profile and suggest improvements:
-
-    Name: ${userProfile.name}
-    Core Values: ${userProfile.values.coreValues.join(', ')}
-    Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
-    Bio: ${userProfile.bio}
-    Social Profiles: ${Object.keys(userProfile.socialProfiles || {}).join(', ')}
-    
-    Generate 3 specific suggestions to improve their profile that:
-    1. Address any missing or incomplete sections
-    2. Enhance existing content
-    3. Add relevant social proof
-    4. Improve visibility and engagement
-    5. Better align with their goals
-    
-    Format each suggestion on a new line.`;
-
   try {
-    const response = await generateResponse(prompt);
-    return response.split('\n').filter(Boolean);
+    const result = await callOpenAI('profile_suggestions', { userProfile });
+    return result.split('\n').filter(Boolean);
   } catch (error) {
     console.error('Error generating profile completion suggestions:', error);
     throw error;
@@ -74,16 +64,8 @@ export const generateProfileCompletionSuggestions = async (userProfile: UserProf
 };
 
 export const generateValueInsights = async (values: UserValues): Promise<string> => {
-  const prompt = `Analyze these user values and provide insights about potential connections and growth areas:
-    Core Values: ${values.coreValues.join(', ')}
-    Personal Goals: ${values.personalGoals.join(', ')}
-    Communication Style: ${values.preferredCommunication.join(', ')}
-    
-    Provide 2-3 insights about what these values suggest about the person and potential areas for connection.`;
-
   try {
-    const insights = await generateResponse(prompt);
-    return insights;
+    return await callOpenAI('value_insights', { userValues: values });
   } catch (error) {
     console.error('Error generating value insights:', error);
     throw error;
@@ -91,26 +73,25 @@ export const generateValueInsights = async (values: UserValues): Promise<string>
 };
 
 export const generateValueAlignmentAnalysis = async (userProfile: UserProfile): Promise<string> => {
-  const prompt = `Analyze the alignment between this user's values and goals:
-
-    Name: ${userProfile.name}
-    Core Values: ${userProfile.values.coreValues.join(', ')}
-    Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
-    Bio: ${userProfile.bio}
-    
-    Provide a thoughtful analysis that includes:
-    1. How well their goals align with their values
-    2. Potential areas of misalignment
-    3. Opportunities for better integration
-    4. Suggestions for goal refinement
-    5. Ways to better communicate their values
-    
-    Keep the analysis concise but insightful.`;
-
   try {
-    const response = await generateResponse(prompt);
-    return response;
+    const prompt = `Analyze the alignment between this user's values and goals:
+
+      Name: ${userProfile.name}
+      Core Values: ${userProfile.values.coreValues.join(', ')}
+      Personal Goals: ${userProfile.values.personalGoals.join(', ')}
+      Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
+      Bio: ${userProfile.bio}
+      
+      Provide a thoughtful analysis that includes:
+      1. How well their goals align with their values
+      2. Potential areas of misalignment
+      3. Opportunities for better integration
+      4. Suggestions for goal refinement
+      5. Ways to better communicate their values
+      
+      Keep the analysis concise but insightful.`;
+
+    return await callOpenAI('text', { prompt });
   } catch (error) {
     console.error('Error generating value alignment analysis:', error);
     throw error;
@@ -135,10 +116,19 @@ export const generateGoalAchievementSuggestions = async (userProfile: UserProfil
     Format each suggestion on a new line.`;
 
   try {
-    const response = await generateResponse(prompt);
+    const response = await callOpenAI('text', { prompt });
     return response.split('\n').filter(Boolean);
   } catch (error) {
     console.error('Error generating goal achievement suggestions:', error);
+    throw error;
+  }
+};
+
+export const enhanceProfiles = async (userA: any, userB: any) => {
+  try {
+    return await callOpenAI('match', { userA, userB });
+  } catch (error) {
+    console.error('Error enhancing profiles:', error);
     throw error;
   }
 }; 

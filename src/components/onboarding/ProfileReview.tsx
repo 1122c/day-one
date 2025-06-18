@@ -6,6 +6,7 @@ interface ProfileReviewProps {
   onEdit: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
+  error?: string | null;
 }
 
 const getPlatformIcon = (platform: string) => {
@@ -25,12 +26,16 @@ const getPlatformIcon = (platform: string) => {
   }
 };
 
-export default function ProfileReview({ profile, onEdit, onSubmit, isSubmitting }: ProfileReviewProps) {
+export default function ProfileReview({ profile, onEdit, onSubmit, isSubmitting, error }: ProfileReviewProps) {
   return (
     <div className="space-y-8">
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-2xl font-semibold text-gray-900 mb-6">Review Your Profile</h2>
-        
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 rounded-md">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
         {/* Basic Info */}
         <div className="space-y-6">
           <div>

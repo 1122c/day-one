@@ -49,10 +49,11 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
       <div className="space-y-6">
         {/* Profile Visibility */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="profileVisibility" className="block text-sm font-medium text-gray-700 mb-2">
             Profile Visibility
           </label>
           <select
+            id="profileVisibility"
             value={profile.privacy.profileVisibility}
             onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -66,8 +67,9 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
 
         {/* Email Visibility */}
         <div>
-          <label className="flex items-center">
+          <label htmlFor="showEmail" className="flex items-center">
             <input
+              id="showEmail"
               type="checkbox"
               checked={profile.privacy.showEmail}
               onChange={(e) => handlePrivacyChange('showEmail', e.target.checked)}
@@ -80,8 +82,9 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
 
         {/* Social Profiles Visibility */}
         <div>
-          <label className="flex items-center">
+          <label htmlFor="showSocialProfiles" className="flex items-center">
             <input
+              id="showSocialProfiles"
               type="checkbox"
               checked={profile.privacy.showSocialProfiles}
               onChange={(e) => handlePrivacyChange('showSocialProfiles', e.target.checked)}
@@ -94,8 +97,9 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
 
         {/* Messaging Permissions */}
         <div>
-          <label className="flex items-center">
+          <label htmlFor="allowMessaging" className="flex items-center">
             <input
+              id="allowMessaging"
               type="checkbox"
               checked={profile.privacy.allowMessaging}
               onChange={(e) => handlePrivacyChange('allowMessaging', e.target.checked)}
@@ -108,8 +112,9 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
 
         {/* Online Status */}
         <div>
-          <label className="flex items-center">
+          <label htmlFor="showOnlineStatus" className="flex items-center">
             <input
+              id="showOnlineStatus"
               type="checkbox"
               checked={profile.privacy.showOnlineStatus}
               onChange={(e) => handlePrivacyChange('showOnlineStatus', e.target.checked)}

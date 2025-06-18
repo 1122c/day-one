@@ -19,6 +19,7 @@ export default function ChatWindow({ match, onClose }: ChatWindowProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     loadMessages();
@@ -70,6 +71,13 @@ export default function ChatWindow({ match, onClose }: ChatWindowProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e as React.FormEvent);
+    }
+  };
 
   if (loading) {
     return (
@@ -129,21 +137,24 @@ export default function ChatWindow({ match, onClose }: ChatWindowProps) {
 
         {/* Input */}
         <form onSubmit={handleSendMessage} className="p-4 border-t">
-          <div className="flex space-x-2">
-            <input
-              type="text"
+          <div className="flex items-center space-x-2">
+            <label htmlFor="messageInput" className="sr-only">Type your message</label>
+            <textarea
+              id="messageInput"
+              ref={textareaRef}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              className="flex-1 min-h-[40px] max-h-[120px] p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+              disabled={loading}
             />
             <button
               type="submit"
-              disabled={!newMessage.trim()}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Send message"
+              disabled={!newMessage.trim() || loading}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FiSend className="h-5 w-5" />
+              Send
             </button>
           </div>
         </form>

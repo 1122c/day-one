@@ -20,11 +20,18 @@ const onboardingSchema = z.object({
   preferredCommunication: z.array(z.string()).min(1, 'Select at least 1 communication preference'),
   timezone: z.string(),
   preferredTimes: z.array(z.string()).min(1, 'Select at least 1 preferred time'),
-  socialProfiles: z.array(z.object({
-    platform: z.enum(['linkedin', 'twitter', 'instagram', 'tiktok', 'onlyfans']),
-    url: z.string().url('Please enter a valid URL').optional(),
-    username: z.string().min(1, 'Username is required'),
-  })).optional(),
+  socialProfiles: z
+    .array(
+      z.object({
+        platform: z.enum(['linkedin', 'twitter', 'instagram', 'tiktok', 'onlyfans']),
+        url: z.string().optional(),
+        username: z.string().optional(),
+      })
+    )
+    .optional()
+    .transform((profiles) => 
+      profiles?.filter(profile => profile.username && profile.username.trim().length > 0) || []
+    ),
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
@@ -201,10 +208,13 @@ export default function OnboardingFlow() {
         email: user.email || '',
         name: data.name,
         bio: data.bio,
-        socialProfiles: data.socialProfiles?.map(profile => ({
-          ...profile,
-          url: profile.url || getPlatformUrl(profile.platform, profile.username)
-        })),
+        socialProfiles: data.socialProfiles
+          ?.filter(profile => profile.username && profile.username.length > 0)
+          .map(profile => ({
+            ...profile,
+            username: profile.username as string,
+            url: profile.url || getPlatformUrl(profile.platform, profile.username as string),
+          })),
         values: {
           coreValues: data.coreValues,
           personalGoals: data.personalGoals,
@@ -235,7 +245,19 @@ export default function OnboardingFlow() {
 
   const handleReviewSubmit = async () => {
     if (reviewData) {
-      await onSubmit(reviewData as any);
+      // Convert reviewData to the format expected by onSubmit
+      const formData: OnboardingFormData = {
+        name: reviewData.name || '',
+        bio: reviewData.bio || '',
+        coreValues: reviewData.values?.coreValues || [],
+        personalGoals: reviewData.values?.personalGoals || [],
+        preferredCommunication: reviewData.values?.preferredCommunication || [],
+        timezone: reviewData.values?.availability?.timezone || 'UTC',
+        preferredTimes: reviewData.values?.availability?.preferredTimes || [],
+        socialProfiles: reviewData.socialProfiles || [],
+      };
+      
+      await onSubmit(formData);
     }
   };
 
@@ -352,6 +374,7 @@ export default function OnboardingFlow() {
                     <input
                       type="checkbox"
                       value={option}
+                      aria-label={option}
                       {...register('preferredCommunication')}
                       className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
@@ -390,6 +413,7 @@ export default function OnboardingFlow() {
                     <input
                       type="checkbox"
                       value={time}
+                      aria-label={time}
                       {...register('preferredTimes')}
                       className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
@@ -485,7 +509,7 @@ export default function OnboardingFlow() {
                                   @{watch(`socialProfiles.${index}.username`)}
                                 </p>
                                 <a
-                                  href={getPlatformUrl(field.platform, watch(`socialProfiles.${index}.username`))}
+                                  href={getPlatformUrl(field.platform, watch(`socialProfiles.${index}.username`) || '')}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-sm text-indigo-600 hover:text-indigo-800"
@@ -527,6 +551,7 @@ export default function OnboardingFlow() {
             onEdit={() => setStep(5)}
             onSubmit={handleReviewSubmit}
             isSubmitting={isSubmitting}
+            error={submitError}
           />
         );
       default:
@@ -637,10 +662,13 @@ export default function OnboardingFlow() {
                           email: user?.email || '',
                           name: formData.name,
                           bio: formData.bio,
-                          socialProfiles: formData.socialProfiles?.map(profile => ({
-                            ...profile,
-                            url: profile.url || getPlatformUrl(profile.platform, profile.username)
-                          })),
+                          socialProfiles: formData.socialProfiles
+                            ?.filter(profile => profile.username && profile.username.length > 0)
+                            .map(profile => ({
+                              ...profile,
+                              username: profile.username as string,
+                              url: profile.url || getPlatformUrl(profile.platform, profile.username as string),
+                            })),
                           values: {
                             coreValues: formData.coreValues,
                             personalGoals: formData.personalGoals,
