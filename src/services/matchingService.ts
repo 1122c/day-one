@@ -1,10 +1,10 @@
 import { UserProfile, Match } from '@/types/user';
-import OpenAI from 'openai';
+// import OpenAI from 'openai';
 import { generateResponse } from './openaiService';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
 
 // Enhanced matching algorithm with multiple scoring factors
 export function calculateCompatibilityScore(

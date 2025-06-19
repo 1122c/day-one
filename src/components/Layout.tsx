@@ -39,82 +39,79 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100">
+      {/* Navbar */}
+      <nav className="bg-white/90 backdrop-blur shadow-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <Link href="/" className="text-xl font-bold text-indigo-600">
-                  ConnectMind
-                </Link>
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+          <div className="flex justify-between h-16 items-center">
+            {/* Logo & Nav */}
+            <div className="flex items-center space-x-8">
+              <Link href="/" className="text-2xl font-extrabold text-indigo-600 tracking-tight flex items-center">
+                ConnectMind
+              </Link>
+              <div className="hidden md:flex space-x-2">
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`${
+                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                         router.pathname === item.href
-                          ? 'border-indigo-500 text-gray-900'
-                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200`}
+                          ? 'bg-indigo-100 text-indigo-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-indigo-700'
+                      }`}
                     >
-                      <Icon className="h-4 w-4 mr-2" />
+                      <Icon className="h-5 w-5 mr-1" />
                       {item.name}
                     </Link>
                   );
                 })}
               </div>
             </div>
+            {/* User & Actions */}
             <div className="flex items-center space-x-4">
-              {!loading && (
+              {!loading && user && (
                 <>
-                  {user ? (
-                    <>
-                      <RealTimeNotifications onNotificationClick={handleNotificationClick} />
-                      <div className="relative">
-                        <button className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900">
-                          <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                            <span className="text-indigo-600 font-medium">
-                              {user.displayName?.[0] || user.email?.[0] || 'U'}
-                            </span>
-                          </div>
-                          <span>{user.displayName || user.email}</span>
-                        </button>
-                      </div>
-                      <Link
-                        href="/settings"
-                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                      >
-                        <FiSettings className="h-5 w-5" />
-                      </Link>
-                      <button
-                        onClick={() => auth.signOut()}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                      >
-                        Sign Out
-                      </button>
-                    </>
-                  ) : (
-                    <Link
-                      href="/auth/signin"
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                    >
-                      Sign In
-                    </Link>
-                  )}
+                  <RealTimeNotifications onNotificationClick={handleNotificationClick} />
+                  <div className="flex items-center space-x-2 bg-indigo-50 px-3 py-1 rounded-full">
+                    <div className="w-8 h-8 bg-indigo-200 rounded-full flex items-center justify-center font-bold text-indigo-700">
+                      {user.displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 truncate max-w-[120px]">{user.displayName || user.email}</span>
+                  </div>
+                  <Link
+                    href="/settings"
+                    className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
+                    title="Settings"
+                  >
+                    <FiSettings className="h-5 w-5" />
+                  </Link>
+                  <button
+                    onClick={() => auth.signOut()}
+                    className="px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                  >
+                    Sign Out
+                  </button>
                 </>
+              )}
+              {!loading && !user && (
+                <Link
+                  href="/auth/signin"
+                  className="px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
               )}
             </div>
           </div>
         </div>
       </nav>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-lg p-8 min-h-[60vh]">
+          {children}
+        </div>
       </main>
     </div>
   );
