@@ -4,7 +4,6 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/router';
 import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings } from 'react-icons/fi';
-import RealTimeNotifications from './notifications/RealTimeNotifications';
 
 interface LayoutProps {
   children: ReactNode;
@@ -20,23 +19,6 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Matches', href: '/matches', icon: FiHeart },
     { name: 'Connections', href: '/connections', icon: FiUsers },
   ];
-
-  const handleNotificationClick = (notification: any) => {
-    // Handle notification clicks based on type
-    switch (notification.type) {
-      case 'match':
-        router.push('/discover?tab=matches');
-        break;
-      case 'message':
-        router.push('/chat');
-        break;
-      case 'profile_view':
-        // Could navigate to profile views page
-        break;
-      default:
-        break;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100">
@@ -73,7 +55,6 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex items-center space-x-4">
               {!loading && user && (
                 <>
-                  <RealTimeNotifications onNotificationClick={handleNotificationClick} />
                   <div className="flex items-center space-x-2 bg-indigo-50 px-3 py-1 rounded-full">
                     <div className="w-8 h-8 bg-indigo-200 rounded-full flex items-center justify-center font-bold text-indigo-700">
                       {user.displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}

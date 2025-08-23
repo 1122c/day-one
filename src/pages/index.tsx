@@ -1,8 +1,146 @@
 import React from 'react';
 import Link from 'next/link';
-import { FiArrowRight, FiZap, FiShield, FiStar } from 'react-icons/fi';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
+import { FiArrowRight, FiZap, FiShield, FiStar, FiUsers, FiMessageSquare, FiTarget, FiHeart } from 'react-icons/fi';
+import Layout from '@/components/Layout';
 
 export default function Home() {
+  const [user, loading] = useAuthState(auth);
+
+  // If still loading auth state, show loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+      </div>
+    );
+  }
+
+  // If user is authenticated, show dashboard
+  if (user) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          {/* Welcome Section */}
+          <div className="bg-white shadow rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Welcome back, {user.displayName || user.email}!
+                </h1>
+                <p className="mt-1 text-gray-600">
+                  Here's what's happening with your connections today.
+                </p>
+              </div>
+              <div className="flex space-x-4">
+                <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                  Update Profile
+                </button>
+                <button className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100">
+                  View Activity
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Section */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                  <FiUsers className="h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Connections</p>
+                  <p className="text-lg font-semibold text-gray-900">12</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-green-100 text-green-600">
+                  <FiMessageSquare className="h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Active Chats</p>
+                  <p className="text-lg font-semibold text-gray-900">5</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+                  <FiTarget className="h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Goals Achieved</p>
+                  <p className="text-lg font-semibold text-gray-900">3</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-pink-100 text-pink-600">
+                  <FiHeart className="h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Match Score</p>
+                  <p className="text-lg font-semibold text-gray-900">85%</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <Link
+                  href="/discover"
+                  className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 flex items-center justify-center"
+                >
+                  Find New Connections
+                </Link>
+                <button className="w-full px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100">
+                  Update Preferences
+                </button>
+                <button className="w-full px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100">
+                  View Activity Log
+                </button>
+              </div>
+            </div>
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <FiHeart className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">New match found!</p>
+                    <p className="text-xs text-gray-500">2 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <FiMessageSquare className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Message received</p>
+                    <p className="text-xs text-gray-500">4 hours ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Landing page for non-authenticated users
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Navigation */}
