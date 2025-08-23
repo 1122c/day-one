@@ -29,6 +29,8 @@ export interface UserProfile {
   values: UserValues;
   createdAt: Date;
   updatedAt: Date;
+  isDeactivated?: boolean;
+  deactivatedAt?: Date;
   privacy: {
     profileVisibility: 'public' | 'matches' | 'private';
     showEmail: boolean;
