@@ -1,5 +1,5 @@
 import { UserProfile, SocialProfile } from '@/types/user';
-import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiHeart } from 'react-icons/fi';
+import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiHeart, FiUsers, FiBookOpen, FiGlobe } from 'react-icons/fi';
 
 interface ProfileReviewProps {
   profile: Partial<UserProfile>;
@@ -21,12 +21,32 @@ const getPlatformIcon = (platform: string) => {
       return <FiMusic className="h-5 w-5 text-black" />;
     case 'onlyfans':
       return <FiHeart className="h-5 w-5 text-pink-500" />;
+    case 'facebook':
+      return <FiUsers className="h-5 w-5 text-blue-500" />;
+    case 'youtube':
+      return <FiBookOpen className="h-5 w-5 text-red-600" />;
+    case 'discord':
+      return <FiGlobe className="h-5 w-5 text-indigo-500" />;
     default:
       return null;
   }
 };
 
 export default function ProfileReview({ profile, onEdit, onSubmit, isSubmitting, error }: ProfileReviewProps) {
+  // Safety check: if profile data is not ready, show loading
+  if (!profile || !profile.name) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+            <p className="ml-3 text-gray-600">Loading profile data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="bg-white shadow rounded-lg p-6">
@@ -43,16 +63,16 @@ export default function ProfileReview({ profile, onEdit, onSubmit, isSubmitting,
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-gray-500">Name</p>
-                <p className="mt-1 text-gray-900">{profile.name}</p>
+                <p className="mt-1 text-gray-900">{profile.name || 'Not provided'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Email</p>
-                <p className="mt-1 text-gray-900">{profile.email}</p>
+                <p className="mt-1 text-gray-900">{profile.email || 'Not provided'}</p>
               </div>
             </div>
             <div className="mt-4">
               <p className="text-sm font-medium text-gray-500">Bio</p>
-              <p className="mt-1 text-gray-900">{profile.bio}</p>
+              <p className="mt-1 text-gray-900">{profile.bio || 'Not provided'}</p>
             </div>
           </div>
 
@@ -60,14 +80,18 @@ export default function ProfileReview({ profile, onEdit, onSubmit, isSubmitting,
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4">Core Values</h3>
             <div className="flex flex-wrap gap-2">
-              {profile.values?.coreValues.map((value) => (
-                <span
-                  key={value}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
-                >
-                  {value}
-                </span>
-              ))}
+              {profile.values?.coreValues && profile.values.coreValues.length > 0 ? (
+                profile.values.coreValues.map((value) => (
+                  <span
+                    key={value}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
+                  >
+                    {value}
+                  </span>
+                ))
+              ) : (
+                <p className="text-gray-500">No core values selected</p>
+              )}
             </div>
           </div>
 
@@ -75,14 +99,18 @@ export default function ProfileReview({ profile, onEdit, onSubmit, isSubmitting,
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Goals</h3>
             <div className="flex flex-wrap gap-2">
-              {profile.values?.personalGoals.map((goal) => (
-                <span
-                  key={goal}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
-                >
-                  {goal}
-                </span>
-              ))}
+              {profile.values?.personalGoals && profile.values.personalGoals.length > 0 ? (
+                profile.values.personalGoals.map((goal) => (
+                  <span
+                    key={goal}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                  >
+                    {goal}
+                  </span>
+                ))
+              ) : (
+                <p className="text-gray-500">No personal goals selected</p>
+              )}
             </div>
           </div>
 

@@ -25,8 +25,11 @@ export default function SignUp() {
     setLoading(true);
 
     try {
+      // Create the Firebase auth account
       await createUserWithEmailAndPassword(auth, email, password);
-      router.push('/');
+      
+      // Redirect to onboarding to complete profile setup
+      router.push('/onboarding');
     } catch (err) {
       setError('Failed to create account. Please try again.');
     } finally {

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile, UserValues, SocialProfile } from '@/types/user';
 import { generateBioSuggestion, generateProfileCompletionSuggestions, generateValueInsights } from '@/services/profileEnhancementService';
-import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiX, FiEye, FiHeart, FiCheck } from 'react-icons/fi';
+import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiX, FiEye, FiHeart, FiCheck, FiMapPin, FiCalendar, FiTarget, FiUsers, FiBookOpen, FiGlobe } from 'react-icons/fi';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { saveUserProfile } from '@/services/firebaseService';
@@ -13,17 +13,23 @@ import { useRouter } from 'next/router';
 import ProfileReview from './ProfileReview';
 
 const onboardingSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  bio: z.string().min(10, 'Bio must be at least 10 characters'),
-  coreValues: z.array(z.string()).min(3, 'Select at least 3 core values'),
-  personalGoals: z.array(z.string()).min(2, 'Select at least 2 personal goals'),
-  preferredCommunication: z.array(z.string()).min(1, 'Select at least 1 communication preference'),
-  timezone: z.string(),
-  preferredTimes: z.array(z.string()).min(1, 'Select at least 1 preferred time'),
+  name: z.string().min(1, 'Name is required'),
+  bio: z.string().optional(),
+  age: z.string().optional(),
+  location: z.string().optional(),
+  occupation: z.string().optional(),
+  education: z.string().optional(),
+  interests: z.array(z.string()).optional(),
+  coreValues: z.array(z.string()).min(1, 'Select at least 1 core value'),
+  personalGoals: z.array(z.string()).min(1, 'Select at least 1 personal goal'),
+  preferredCommunication: z.array(z.string()).optional(),
+  timezone: z.string().optional(),
+  preferredTimes: z.array(z.string()).optional(),
+  availability: z.string().optional(),
   socialProfiles: z
     .array(
       z.object({
-        platform: z.enum(['linkedin', 'twitter', 'instagram', 'tiktok', 'onlyfans']),
+        platform: z.enum(['linkedin', 'twitter', 'instagram', 'tiktok', 'onlyfans', 'facebook', 'youtube', 'discord']),
         url: z.string().optional(),
         username: z.string().optional(),
       })
@@ -45,6 +51,14 @@ const coreValuesOptions = [
   'Collaboration',
   'Balance',
   'Purpose',
+  'Creativity',
+  'Leadership',
+  'Learning',
+  'Community',
+  'Adventure',
+  'Stability',
+  'Excellence',
+  'Compassion',
 ];
 
 const personalGoalsOptions = [
@@ -54,6 +68,16 @@ const personalGoalsOptions = [
   'Collaboration',
   'Learning',
   'Support',
+  'Career Growth',
+  'Skill Development',
+  'Business Partnership',
+  'Creative Projects',
+  'Personal Development',
+  'Community Building',
+  'Travel & Adventure',
+  'Health & Wellness',
+  'Financial Success',
+  'Social Impact',
 ];
 
 const communicationOptions = [
@@ -61,13 +85,65 @@ const communicationOptions = [
   'Text Chat',
   'Voice Calls',
   'In-Person Meetings',
+  'Email',
+  'Social Media',
+  'Group Chats',
+  'Workshops',
+  'Conferences',
+  'Coffee Meetings',
 ];
 
 const timeOptions = [
-  'Morning',
-  'Afternoon',
-  'Evening',
+  'Early Morning (6-9 AM)',
+  'Morning (9 AM-12 PM)',
+  'Afternoon (12-5 PM)',
+  'Evening (5-9 PM)',
+  'Late Evening (9 PM-12 AM)',
   'Weekends',
+  'Weekdays',
+  'Flexible',
+];
+
+const availabilityOptions = [
+  'Very Available (Multiple times per week)',
+  'Moderately Available (Weekly)',
+  'Occasionally Available (Bi-weekly)',
+  'Limited Availability (Monthly)',
+  'On-Demand',
+];
+
+const interestOptions = [
+  'Technology',
+  'Business',
+  'Arts & Culture',
+  'Sports & Fitness',
+  'Travel',
+  'Food & Cooking',
+  'Music',
+  'Reading',
+  'Gaming',
+  'Photography',
+  'Writing',
+  'Science',
+  'History',
+  'Languages',
+  'Volunteering',
+  'Environment',
+  'Health & Wellness',
+  'Fashion',
+  'Automotive',
+  'Finance',
+  'Education',
+  'Politics',
+  'Philosophy',
+  'Psychology',
+  'Engineering',
+  'Design',
+  'Marketing',
+  'Sales',
+  'Healthcare',
+  'Law',
+  'Real Estate',
 ];
 
 export default function OnboardingFlow() {
@@ -102,7 +178,17 @@ export default function OnboardingFlow() {
         { platform: 'twitter', username: '', url: '' },
         { platform: 'instagram', username: '', url: '' },
         { platform: 'tiktok', username: '', url: '' },
+        { platform: 'onlyfans', username: '', url: '' },
+        { platform: 'facebook', username: '', url: '' },
+        { platform: 'youtube', username: '', url: '' },
+        { platform: 'discord', username: '', url: '' },
       ],
+      interests: [],
+      age: '',
+      location: '',
+      occupation: '',
+      education: '',
+      availability: '',
     },
   });
 
@@ -123,6 +209,12 @@ export default function OnboardingFlow() {
         return <FiMusic className="h-6 w-6 text-black" />;
       case 'onlyfans':
         return <FiHeart className="h-6 w-6 text-pink-500" />;
+      case 'facebook':
+        return <FiUsers className="h-6 w-6 text-blue-500" />;
+      case 'youtube':
+        return <FiBookOpen className="h-6 w-6 text-red-600" />;
+      case 'discord':
+        return <FiGlobe className="h-6 w-6 text-indigo-500" />;
       default:
         return null;
     }
@@ -140,6 +232,12 @@ export default function OnboardingFlow() {
         return 'bg-gray-100';
       case 'onlyfans':
         return 'bg-pink-50';
+      case 'facebook':
+        return 'bg-blue-50';
+      case 'youtube':
+        return 'bg-red-50';
+      case 'discord':
+        return 'bg-indigo-50';
       default:
         return 'bg-gray-100';
     }
@@ -157,6 +255,12 @@ export default function OnboardingFlow() {
         return `https://tiktok.com/@${username}`;
       case 'onlyfans':
         return `https://onlyfans.com/${username}`;
+      case 'facebook':
+        return `https://facebook.com/${username}`;
+      case 'youtube':
+        return `https://youtube.com/@${username}`;
+      case 'discord':
+        return `https://discord.gg/${username}`;
       default:
         return '';
     }
@@ -218,10 +322,10 @@ export default function OnboardingFlow() {
         values: {
           coreValues: data.coreValues,
           personalGoals: data.personalGoals,
-          preferredCommunication: data.preferredCommunication,
+          preferredCommunication: data.preferredCommunication || [],
           availability: {
-            timezone: data.timezone,
-            preferredTimes: data.preferredTimes,
+            timezone: data.timezone || '',
+            preferredTimes: data.preferredTimes || [],
           },
         },
         createdAt: new Date(),
@@ -268,31 +372,88 @@ export default function OnboardingFlow() {
           <div className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Name
+                Name *
               </label>
               <input
                 type="text"
                 id="name"
                 {...register('name')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                placeholder="Enter your full name"
               />
               {errors.name && (
                 <p className="mt-2 text-sm text-red-600">{errors.name.message}</p>
               )}
             </div>
+            
+            <div>
+              <label htmlFor="age" className="block text-sm font-medium text-gray-700">
+                Age (Optional)
+              </label>
+              <input
+                type="number"
+                id="age"
+                {...register('age')}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                placeholder="Enter your age"
+                min="18"
+                max="120"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                Location (Optional)
+              </label>
+              <div className="mt-1 relative">
+                <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  id="location"
+                  {...register('location')}
+                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  placeholder="City, State/Country"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="occupation" className="block text-sm font-medium text-gray-700">
+                Occupation (Optional)
+              </label>
+              <input
+                type="text"
+                id="occupation"
+                {...register('occupation')}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                placeholder="e.g., Software Engineer, Teacher, Entrepreneur"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="education" className="block text-sm font-medium text-gray-700">
+                Education (Optional)
+              </label>
+              <input
+                type="text"
+                id="education"
+                {...register('education')}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                placeholder="e.g., Bachelor's in Computer Science, Self-taught"
+              />
+            </div>
+
             <div>
               <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-                Bio
+                Bio (Optional)
               </label>
               <textarea
                 id="bio"
                 rows={4}
                 {...register('bio')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                placeholder="Tell us about yourself, your interests, and what you're looking for... (optional)"
               />
-              {errors.bio && (
-                <p className="mt-2 text-sm text-red-600">{errors.bio.message}</p>
-              )}
               {aiSuggestions.bio && (
                 <div className="mt-2 p-4 bg-indigo-50 rounded-md">
                   <p className="text-sm text-indigo-700 font-medium mb-2">AI Suggestion:</p>
@@ -304,6 +465,13 @@ export default function OnboardingFlow() {
                   >
                     Use this suggestion
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setValue('bio', '')}
+                    className="mt-2 ml-2 text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    Clear bio
+                  </button>
                 </div>
               )}
             </div>
@@ -314,15 +482,26 @@ export default function OnboardingFlow() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Core Values
+                Core Values *
               </label>
+              <p className="text-sm text-gray-600 mb-4">
+                Select at least one core value that resonates with you.
+              </p>
               <div className="mt-2 grid grid-cols-2 gap-4">
                 {coreValuesOptions.map((value) => (
                   <label key={value} className="inline-flex items-center">
                     <input
                       type="checkbox"
                       value={value}
-                      {...register('coreValues')}
+                      checked={watch('coreValues')?.includes(value) || false}
+                      onChange={(e) => {
+                        const currentValues = watch('coreValues') || [];
+                        if (e.target.checked) {
+                          setValue('coreValues', [...currentValues, value]);
+                        } else {
+                          setValue('coreValues', currentValues.filter(v => v !== value));
+                        }
+                      }}
                       className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                     <span className="ml-2">{value}</span>
@@ -340,15 +519,26 @@ export default function OnboardingFlow() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Personal Goals
+                Personal Goals *
               </label>
+              <p className="text-sm text-gray-600 mb-4">
+                Select at least one personal goal that you're working towards.
+              </p>
               <div className="mt-2 grid grid-cols-2 gap-4">
                 {personalGoalsOptions.map((goal) => (
                   <label key={goal} className="inline-flex items-center">
                     <input
                       type="checkbox"
                       value={goal}
-                      {...register('personalGoals')}
+                      checked={watch('personalGoals')?.includes(goal) || false}
+                      onChange={(e) => {
+                        const currentValues = watch('personalGoals') || [];
+                        if (e.target.checked) {
+                          setValue('personalGoals', [...currentValues, goal]);
+                        } else {
+                          setValue('personalGoals', currentValues.filter(v => v !== goal));
+                        }
+                      }}
                       className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                     <span className="ml-2">{goal}</span>
@@ -366,7 +556,7 @@ export default function OnboardingFlow() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Preferred Communication
+                Preferred Communication (Optional)
               </label>
               <div className="mt-2 grid grid-cols-2 gap-4">
                 {communicationOptions.map((option) => (
@@ -375,37 +565,47 @@ export default function OnboardingFlow() {
                       type="checkbox"
                       value={option}
                       aria-label={option}
-                      {...register('preferredCommunication')}
+                      checked={watch('preferredCommunication')?.includes(option) || false}
+                      onChange={(e) => {
+                        const currentValues = watch('preferredCommunication') || [];
+                        if (e.target.checked) {
+                          setValue('preferredCommunication', [...currentValues, option]);
+                        } else {
+                          setValue('preferredCommunication', currentValues.filter(v => v !== option));
+                        }
+                      }}
                       className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                     <span className="ml-2">{option}</span>
                   </label>
                 ))}
               </div>
-              {errors.preferredCommunication && (
-                <p className="mt-2 text-sm text-red-600">
-                  {errors.preferredCommunication.message}
-                </p>
-              )}
             </div>
             <div>
               <label htmlFor="timezone" className="block text-sm font-medium text-gray-700">
-                Timezone
+                Timezone (Optional)
               </label>
               <select
                 id="timezone"
                 {...register('timezone')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
+                <option value="">Select timezone (optional)</option>
                 <option value="UTC">UTC</option>
                 <option value="EST">EST</option>
                 <option value="PST">PST</option>
+                <option value="CST">CST</option>
+                <option value="MST">MST</option>
+                <option value="GMT">GMT</option>
+                <option value="CET">CET</option>
+                <option value="JST">JST</option>
+                <option value="AEST">AEST</option>
                 {/* Add more timezones as needed */}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Preferred Times
+                Preferred Times (Optional)
               </label>
               <div className="mt-2 grid grid-cols-2 gap-4">
                 {timeOptions.map((time) => (
@@ -414,20 +614,76 @@ export default function OnboardingFlow() {
                       type="checkbox"
                       value={time}
                       aria-label={time}
-                      {...register('preferredTimes')}
+                      checked={watch('preferredTimes')?.includes(time) || false}
+                      onChange={(e) => {
+                        const currentValues = watch('preferredTimes') || [];
+                        if (e.target.checked) {
+                          setValue('preferredTimes', [...currentValues, time]);
+                        } else {
+                          setValue('preferredTimes', currentValues.filter(v => v !== time));
+                        }
+                      }}
                       className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                     <span className="ml-2">{time}</span>
                   </label>
                 ))}
               </div>
-              {errors.preferredTimes && (
-                <p className="mt-2 text-sm text-red-600">{errors.preferredTimes.message}</p>
-              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                General Availability (Optional)
+              </label>
+              <select
+                {...register('availability')}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              >
+                <option value="">Select your general availability</option>
+                {availabilityOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         );
       case 5:
+        return (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Interests & Hobbies (Optional)
+              </label>
+              <p className="text-sm text-gray-600 mb-4">
+                Select topics that interest you to help find like-minded connections.
+              </p>
+              <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+                {interestOptions.map((interest) => (
+                  <label key={interest} className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      value={interest}
+                      checked={watch('interests')?.includes(interest) || false}
+                      onChange={(e) => {
+                        const currentValues = watch('interests') || [];
+                        if (e.target.checked) {
+                          setValue('interests', [...currentValues, interest]);
+                        } else {
+                          setValue('interests', currentValues.filter(v => v !== interest));
+                        }
+                      }}
+                      className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                    <span className="ml-2 text-sm">{interest}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case 6:
         return (
           <div className="space-y-6">
             <div>
@@ -546,9 +802,126 @@ export default function OnboardingFlow() {
         );
       case 6:
         return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Social Profiles (Optional)</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Add your social profiles to help others connect with you.
+              </p>
+              
+              <div className="space-y-6">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="relative">
+                    <div className="flex items-start space-x-4">
+                      <div className={`p-2 rounded-lg ${getPlatformColor(field.platform)}`}>
+                        {getPlatformIcon(field.platform)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 capitalize">
+                            {field.platform} Profile
+                          </label>
+                          <div className="flex space-x-2">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewProfile(index)}
+                              className="text-gray-400 hover:text-gray-600"
+                              title="Preview Profile"
+                            >
+                              <FiEye className="h-5 w-5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => remove(index)}
+                              className="text-gray-400 hover:text-red-600"
+                              title="Remove Profile"
+                            >
+                              <FiX className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            placeholder="Username"
+                            {...register(`socialProfiles.${index}.username`)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                          <input
+                            type="url"
+                            placeholder="Profile URL (optional)"
+                            {...register(`socialProfiles.${index}.url`)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview Modal */}
+                    {previewProfile === index && (
+                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                          <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 capitalize">
+                              {field.platform} Profile Preview
+                            </h3>
+                            <button
+                              onClick={() => setPreviewProfile(null)}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <FiX className="h-5 w-5" />
+                            </button>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-2 rounded-lg ${getPlatformColor(field.platform)}`}>
+                                {getPlatformIcon(field.platform)}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">
+                                  @{watch(`socialProfiles.${index}.username`)}
+                                </p>
+                                <a
+                                  href={getPlatformUrl(field.platform, watch(`socialProfiles.${index}.username`) || '')}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-indigo-600 hover:text-indigo-800"
+                                >
+                                  View Profile
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentProfiles = watch('socialProfiles') || [];
+                    if (currentProfiles.length < 8) {
+                      setValue('socialProfiles', [
+                        ...currentProfiles,
+                        { platform: 'linkedin', username: '', url: '' },
+                      ]);
+                    }
+                  }}
+                  className="mt-4 w-full px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
+                >
+                  Add Another Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      case 7:
+        return (
           <ProfileReview
             profile={reviewData!}
-            onEdit={() => setStep(5)}
+            onEdit={() => setStep(6)}
             onSubmit={handleReviewSubmit}
             isSubmitting={isSubmitting}
             error={submitError}
@@ -588,11 +961,11 @@ export default function OnboardingFlow() {
 
           <div className="mb-6">
             <div className="flex items-center justify-between">
-              {[1, 2, 3, 4, 5, 6].map((s) => (
+              {[1, 2, 3, 4, 5, 6, 7].map((s) => (
                 <div
                   key={s}
                   className={`flex items-center ${
-                    s !== 6 ? 'flex-1' : ''
+                    s !== 7 ? 'flex-1' : ''
                   }`}
                 >
                   <div
@@ -604,7 +977,7 @@ export default function OnboardingFlow() {
                   >
                     {s}
                   </div>
-                  {s !== 6 && (
+                  {s !== 7 && (
                     <div
                       className={`flex-1 h-1 mx-4 ${
                         s < step ? 'bg-indigo-600' : 'bg-gray-200'
@@ -617,6 +990,28 @@ export default function OnboardingFlow() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* Step Title */}
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {step === 1 && 'Basic Information'}
+                {step === 2 && 'Core Values'}
+                {step === 3 && 'Personal Goals'}
+                {step === 4 && 'Communication & Availability (All Optional)'}
+                {step === 5 && 'Interests & Hobbies'}
+                {step === 6 && 'Social Profiles'}
+                {step === 7 && 'Review & Complete'}
+              </h2>
+              <p className="text-gray-600 mt-2">
+                {step === 1 && 'Tell us about yourself'}
+                {step === 2 && 'What values drive you?'}
+                {step === 3 && 'What are you looking to achieve?'}
+                {step === 4 && 'How do you prefer to connect? (All fields optional)'}
+                {step === 5 && 'What interests you?'}
+                {step === 6 && 'Connect your social presence'}
+                {step === 7 && 'Review your profile before saving'}
+              </p>
+            </div>
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -629,7 +1024,7 @@ export default function OnboardingFlow() {
               </motion.div>
             </AnimatePresence>
 
-            {step < 6 && (
+            {step < 7 && (
               <div className="flex justify-between">
                 {step > 1 && (
                   <button
@@ -646,22 +1041,30 @@ export default function OnboardingFlow() {
                   onClick={async () => {
                     let valid = false;
                     if (step === 1) {
-                      valid = await trigger(['name', 'bio']);
+                      valid = await trigger(['name']);
                     } else if (step === 2) {
                       valid = await trigger(['coreValues']);
                     } else if (step === 3) {
                       valid = await trigger(['personalGoals']);
                     } else if (step === 4) {
-                      valid = await trigger(['preferredCommunication', 'timezone', 'preferredTimes']);
+                      valid = true; // All fields are optional in step 4
                     } else if (step === 5) {
+                      valid = await trigger(['interests']);
+                    } else if (step === 6) {
                       valid = await trigger(['socialProfiles']);
                       if (valid) {
+                        // Prepare review data when moving from step 6 to step 7
                         const formData = watch();
                         setReviewData({
                           id: user?.uid,
                           email: user?.email || '',
                           name: formData.name,
-                          bio: formData.bio,
+                          bio: formData.bio || '',
+                          age: formData.age || '',
+                          location: formData.location || '',
+                          occupation: formData.occupation || '',
+                          education: formData.education || '',
+                          interests: formData.interests || [],
                           socialProfiles: formData.socialProfiles
                             ?.filter(profile => profile.username && profile.username.length > 0)
                             .map(profile => ({
@@ -672,14 +1075,18 @@ export default function OnboardingFlow() {
                           values: {
                             coreValues: formData.coreValues,
                             personalGoals: formData.personalGoals,
-                            preferredCommunication: formData.preferredCommunication,
+                            preferredCommunication: formData.preferredCommunication || [],
                             availability: {
-                              timezone: formData.timezone,
-                              preferredTimes: formData.preferredTimes,
+                              timezone: formData.timezone || '',
+                              preferredTimes: formData.preferredTimes || [],
+                              availability: formData.availability || '',
                             },
                           },
                         });
                       }
+                    } else if (step === 7) {
+                      // Review step is always valid
+                      valid = true;
                     }
                     if (valid) {
                       if (step === 2) {
