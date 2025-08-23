@@ -124,6 +124,190 @@ export default function SettingsPage() {
                   />
                 </div>
 
+                {/* Additional Personal Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Age
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.age || ''}
+                      disabled={!isEditing}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      placeholder="e.g., 25"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.location || ''}
+                      disabled={!isEditing}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      placeholder="City, State/Country"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Occupation
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.occupation || ''}
+                      disabled={!isEditing}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      placeholder="Your profession or role"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Education
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.education || ''}
+                      disabled={!isEditing}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      placeholder="Degree, institution, or learning path"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Interests
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={profile.interests?.join(', ') || ''}
+                    disabled={!isEditing}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    placeholder="Your interests, hobbies, or passions (comma-separated)"
+                  />
+                </div>
+
+                {/* Social Profiles */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Social Profiles
+                  </label>
+                  <div className="space-y-3">
+                    {profile.socialProfiles?.map((social, index) => (
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <select
+                          value={social.platform}
+                          disabled={!isEditing}
+                          className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        >
+                          <option value="linkedin">LinkedIn</option>
+                          <option value="twitter">Twitter</option>
+                          <option value="instagram">Instagram</option>
+                          <option value="facebook">Facebook</option>
+                          <option value="youtube">YouTube</option>
+                          <option value="discord">Discord</option>
+                          <option value="onlyfans">OnlyFans</option>
+                        </select>
+                        <input
+                          type="url"
+                          value={social.url}
+                          disabled={!isEditing}
+                          className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                          placeholder="Profile URL"
+                        />
+                      </div>
+                    ))}
+                    {isEditing && (
+                      <button
+                        type="button"
+                        className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        + Add Social Profile
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Core Values */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Core Values
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={profile.values?.coreValues?.join(', ') || ''}
+                    disabled={!isEditing}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    placeholder="Your core values and principles (comma-separated)"
+                  />
+                </div>
+
+                {/* Personal Goals */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Personal Goals
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={profile.values?.personalGoals?.join(', ') || ''}
+                    disabled={!isEditing}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    placeholder="Your personal and professional goals (comma-separated)"
+                  />
+                </div>
+
+                {/* Communication Preferences */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Communication Preferences
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={profile.values?.preferredCommunication?.join(', ') || ''}
+                    disabled={!isEditing}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    placeholder="How you prefer to communicate (e.g., Direct, Respectful, Engaging)"
+                  />
+                </div>
+
+                {/* Availability */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Timezone
+                    </label>
+                    <select
+                      value={profile.values?.availability?.timezone || ''}
+                      disabled={!isEditing}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    >
+                      <option value="">Select timezone</option>
+                      <option value="UTC">UTC</option>
+                      <option value="EST">EST</option>
+                      <option value="PST">PST</option>
+                      <option value="CST">CST</option>
+                      <option value="MST">MST</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Preferred Times
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={profile.values?.availability?.preferredTimes?.join(', ') || ''}
+                      disabled={!isEditing}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      placeholder="When you're most available (e.g., Evening, Weekend, Weekday)"
+                    />
+                  </div>
+                </div>
+
                 {isEditing && (
                   <div className="flex justify-end space-x-3">
                     <button

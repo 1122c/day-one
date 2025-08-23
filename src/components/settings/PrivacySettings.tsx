@@ -26,6 +26,7 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
     showEmail: false,
     showSocialProfiles: true,
     allowMessaging: true,
+    messageSource: 'connections',
     showOnlineStatus: true,
     showReadReceipts: true,
     showTypingIndicators: true,
@@ -165,8 +166,9 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
             disabled={loading}
           >
             <option value="public">Public - Anyone can view your profile</option>
-            <option value="matches">Matches Only - Only your matches can view your profile</option>
+            <option value="connections">Connections Only - Only your connections can view your profile</option>
             <option value="private">Private - Only you can view your profile</option>
+            <option value="hidden">Hidden - Profile is completely hidden from all users</option>
           </select>
         </div>
 
@@ -211,8 +213,25 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
               className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               disabled={loading}
             />
-            <span className="ml-2 text-sm text-gray-700">Allow messaging from matches</span>
+            <span className="ml-2 text-sm text-gray-700">Allow messaging from connections</span>
           </label>
+        </div>
+
+        {/* Message Source Control */}
+        <div>
+          <label htmlFor="messageSource" className="block text-sm font-medium text-gray-700 mb-2">
+            Who can send you messages
+          </label>
+          <select
+            id="messageSource"
+            value={privacy.messageSource || 'connections'}
+            onChange={(e) => handlePrivacyChange('messageSource', e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            disabled={loading}
+          >
+            <option value="connections">Connections Only - Only people you're connected with can message you</option>
+            <option value="anyone">Anyone - Anyone can send you a message</option>
+          </select>
         </div>
 
         {/* Online Status */}

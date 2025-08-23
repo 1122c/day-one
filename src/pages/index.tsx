@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
-import { FiArrowRight, FiZap, FiShield, FiStar, FiUsers, FiMessageSquare, FiTarget, FiHeart } from 'react-icons/fi';
+import { FiArrowRight, FiZap, FiShield, FiStar, FiUsers, FiMessageSquare, FiHeart } from 'react-icons/fi';
 import Layout from '@/components/Layout';
 
 export default function Home() {
@@ -34,18 +34,18 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex space-x-4">
-                <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                <Link
+                  href="/settings"
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                >
                   Update Profile
-                </button>
-                <button className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100">
-                  View Activity
-                </button>
+                </Link>
               </div>
             </div>
           </div>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white shadow rounded-lg p-6">
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
@@ -68,17 +68,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="bg-white shadow rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-purple-100 text-purple-600">
-                  <FiTarget className="h-6 w-6" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Goals Achieved</p>
-                  <p className="text-lg font-semibold text-gray-900">3</p>
-                </div>
-              </div>
-            </div>
+
             <div className="bg-white shadow rounded-lg p-6">
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-pink-100 text-pink-600">
@@ -105,9 +95,6 @@ export default function Home() {
                 </Link>
                 <button className="w-full px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100">
                   Update Preferences
-                </button>
-                <button className="w-full px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100">
-                  View Activity Log
                 </button>
               </div>
             </div>

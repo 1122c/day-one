@@ -32,10 +32,11 @@ export interface UserProfile {
   isDeactivated?: boolean;
   deactivatedAt?: Date;
   privacy: {
-    profileVisibility: 'public' | 'matches' | 'private';
+    profileVisibility: 'public' | 'connections' | 'private' | 'hidden';
     showEmail: boolean;
     showSocialProfiles: boolean;
     allowMessaging: boolean;
+    messageSource: 'connections' | 'anyone';
     showOnlineStatus: boolean;
     showReadReceipts: boolean;
     showTypingIndicators: boolean;
