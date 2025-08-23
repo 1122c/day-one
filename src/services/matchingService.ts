@@ -1,10 +1,187 @@
 import { UserProfile, Match } from '@/types/user';
-// import OpenAI from 'openai';
-import { generateResponse } from './openaiService';
 
-// const openai = new OpenAI({
-//   apiKey: process.env.OPENAI_API_KEY,
-// });
+// Use the Next.js API route instead of direct OpenAI calls
+async function callOpenAI(prompt: string, systemPrompt: string = ''): Promise<string> {
+  try {
+    const response = await fetch('/api/openai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt,
+        systemPrompt,
+        type: 'matching'
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.suggestions || '';
+  } catch (error) {
+    console.error('Error calling OpenAI API:', error);
+    return '';
+  }
+}
+
+export async function generateMatchSuggestions(
+  currentUser: UserProfile,
+  matchedUser: UserProfile
+): Promise<string[]> {
+  const prompt = `Given these two profiles:
+  
+  Person 1 (${currentUser.name}):
+  - Bio: ${currentUser.bio || 'Not provided'}
+  - Interests: ${currentUser.interests?.join(', ') || 'Not specified'}
+  - Values: ${currentUser.values?.coreValues?.join(', ') || 'Not specified'}
+  - Goals: ${currentUser.values?.personalGoals?.join(', ') || 'Not specified'}
+  
+  Person 2 (${matchedUser.name}):
+  - Bio: ${matchedUser.bio || 'Not provided'}
+  - Interests: ${matchedUser.interests?.join(', ') || 'Not specified'}
+  - Values: ${matchedUser.values?.coreValues?.join(', ') || 'Not specified'}
+  - Goals: ${matchedUser.values?.personalGoals?.join(', ') || 'Not specified'}
+  
+  Generate 3 specific suggestions for activities or topics they could explore together based on their shared interests and complementary strengths.`;
+
+  const response = await callOpenAI(prompt);
+  
+  if (!response) {
+    // Fallback suggestions
+    return [
+      "Explore a shared interest through a workshop or online course together",
+      "Start a collaborative project that combines both of your unique skills",
+      "Schedule regular coffee chats to discuss your professional goals and progress"
+    ];
+  }
+  
+  // Parse the response into an array
+  return response
+    .split('\n')
+    .filter(line => line.trim().length > 0)
+    .map(line => line.replace(/^\d+\.\s*/, '').trim())
+    .slice(0, 3);
+}
+
+export async function generateInitialMessage(
+  currentUser: UserProfile,
+  targetUser: UserProfile
+): Promise<string> {
+  const prompt = `Write a friendly, engaging first message from ${currentUser.name} to ${targetUser.name}.
+  
+  ${currentUser.name}'s background:
+  - ${currentUser.bio || 'Professional looking to connect'}
+  - Interests: ${currentUser.interests?.join(', ') || 'Various'}
+  
+  ${targetUser.name}'s background:
+  - ${targetUser.bio || 'Open to connections'}
+  - Interests: ${targetUser.interests?.join(', ') || 'Various'}
+  
+  The message should:
+  - Be warm and genuine
+  - Reference something specific from their profile
+  - Ask an engaging question
+  - Be 2-3 sentences maximum`;
+
+  const systemPrompt = 'You are an expert at writing personalized, engaging first messages that start meaningful conversations.';
+  
+  const response = await callOpenAI(prompt, systemPrompt);
+  
+  if (!response) {
+    // Fallback message
+    return `Hi ${targetUser.name}! I noticed we share some common interests and values. I'd love to hear about your journey and what you're currently working on. What's been the most exciting part of your recent projects?`;
+  }
+  
+  return response.trim();
+}
+
+export async function generateFollowUpQuestions(
+  currentUser: UserProfile,
+  matchedUser: UserProfile,
+  conversationHistory: string[]
+): Promise<string[]> {
+  // Get last few messages for context
+  const recentMessages = conversationHistory.slice(-3).join('\n');
+  
+  const prompt = `Based on this conversation between ${currentUser.name} and ${matchedUser.name}:
+  
+  "${recentMessages}"
+  
+  Generate 3 natural follow-up questions that:
+  - Build on what was just discussed
+  - Show genuine interest and active listening
+  - Encourage deeper conversation
+  - Are concise and conversational`;
+
+  const response = await callOpenAI(prompt);
+  
+  if (!response) {
+    // Fallback questions
+    return [
+      "What inspired you to take that approach?",
+      "How has that experience shaped your current goals?",
+      "What's the next step in your journey with this?"
+    ];
+  }
+  
+  // Parse response into array
+  return response
+    .split('\n')
+    .filter(line => line.trim().length > 0)
+    .map(line => line.replace(/^\d+\.\s*/, '').replace(/^[-•]\s*/, '').trim())
+    .filter(line => line.endsWith('?'))
+    .slice(0, 3);
+}
+
+export async function calculateMatchScore(
+  user1: UserProfile,
+  user2: UserProfile
+): Promise<number> {
+  // Calculate base score from shared interests
+  const sharedInterests = user1.interests?.filter(
+    interest => user2.interests?.includes(interest)
+  ).length || 0;
+  
+  const totalInterests = Math.max(
+    user1.interests?.length || 0,
+    user2.interests?.length || 0
+  );
+  
+  const interestScore = totalInterests > 0 ? (sharedInterests / totalInterests) * 40 : 0;
+  
+  // Calculate values alignment
+  const sharedValues = user1.values?.coreValues?.filter(
+    value => user2.values?.coreValues?.includes(value)
+  ).length || 0;
+  
+  const totalValues = Math.max(
+    user1.values?.coreValues?.length || 0,
+    user2.values?.coreValues?.length || 0
+  );
+  
+  const valueScore = totalValues > 0 ? (sharedValues / totalValues) * 30 : 0;
+  
+  // Calculate goal compatibility
+  const sharedGoals = user1.values?.personalGoals?.filter(
+    goal => user2.values?.personalGoals?.includes(goal)
+  ).length || 0;
+  
+  const totalGoals = Math.max(
+    user1.values?.personalGoals?.length || 0,
+    user2.values?.personalGoals?.length || 0
+  );
+  
+  const goalScore = totalGoals > 0 ? (sharedGoals / totalGoals) * 30 : 0;
+  
+  // Calculate total score
+  const totalScore = Math.round(interestScore + valueScore + goalScore);
+  
+  // Ensure score is between 0 and 100
+  return Math.min(100, Math.max(0, totalScore));
+}
 
 // Enhanced matching algorithm with multiple scoring factors
 export function calculateCompatibilityScore(
@@ -19,21 +196,21 @@ export function calculateCompatibilityScore(
   interestsOverlap: number;
 } {
   // Values alignment (40% weight)
-  const valuesAlignment = calculateValuesAlignment(user1.values.coreValues, user2.values.coreValues);
+  const valuesAlignment = calculateValuesAlignment(user1.values?.coreValues || [], user2.values?.coreValues || []);
   
   // Goals alignment (25% weight)
-  const goalsAlignment = calculateGoalsAlignment(user1.values.personalGoals, user2.values.personalGoals);
+  const goalsAlignment = calculateGoalsAlignment(user1.values?.personalGoals || [], user2.values?.personalGoals || []);
   
   // Communication style (20% weight)
   const communicationStyle = calculateCommunicationAlignment(
-    user1.values.preferredCommunication,
-    user2.values.preferredCommunication
+    user1.values?.preferredCommunication || [],
+    user2.values?.preferredCommunication || []
   );
   
   // Availability match (10% weight)
   const availabilityMatch = calculateAvailabilityMatch(
-    user1.values.availability,
-    user2.values.availability
+    user1.values?.availability,
+    user2.values?.availability
   );
   
   // Interests overlap (5% weight) - based on bio analysis
@@ -77,15 +254,17 @@ function calculateCommunicationAlignment(comm1: string[], comm2: string[]): numb
 }
 
 function calculateAvailabilityMatch(avail1: any, avail2: any): number {
+  if (!avail1 || !avail2) return 50;
+  
   // Check timezone compatibility
   const timezoneMatch = avail1.timezone === avail2.timezone ? 100 : 50;
   
   // Check overlapping preferred times
-  const commonTimes = avail1.preferredTimes.filter((time: string) => 
-    avail2.preferredTimes.includes(time)
+  const commonTimes = (avail1.preferredTimes || []).filter((time: string) => 
+    (avail2.preferredTimes || []).includes(time)
   );
-  const timeOverlap = avail1.preferredTimes.length > 0 ? 
-    (commonTimes.length / Math.max(avail1.preferredTimes.length, avail2.preferredTimes.length)) * 100 : 0;
+  const timeOverlap = (avail1.preferredTimes || []).length > 0 ? 
+    (commonTimes.length / Math.max((avail1.preferredTimes || []).length, (avail2.preferredTimes || []).length)) * 100 : 0;
   
   return (timezoneMatch + timeOverlap) / 2;
 }
@@ -121,19 +300,19 @@ export async function generateMatches(
       // Generate AI-powered match reason
       const matchReason = await generateMatchReason(userProfile, potentialMatch, compatibility);
       
-      matches.push({
-        id: `${userProfile.id}-${potentialMatch.id}`,
-        userIds: [userProfile.id, potentialMatch.id],
-        matchScore: compatibility.overallScore,
-        compatibilityFactors: {
-          valuesAlignment: compatibility.valuesAlignment,
-          goalsAlignment: compatibility.goalsAlignment,
-          communicationStyle: compatibility.communicationStyle,
-        },
-        matchReason,
-        createdAt: new Date(),
-        status: 'pending',
-      });
+              matches.push({
+          id: `${userProfile.id}-${potentialMatch.id}`,
+          userIds: [userProfile.id, potentialMatch.id],
+          matchScore: compatibility.overallScore,
+          compatibilityFactors: {
+            valuesAlignment: compatibility.valuesAlignment,
+            goalsAlignment: compatibility.goalsAlignment,
+            communicationStyle: compatibility.communicationStyle,
+          },
+          matchReason,
+          createdAt: new Date(),
+          status: 'pending',
+        });
     }
 
     if (matches.length >= maxMatches) break;
@@ -152,15 +331,15 @@ async function generateMatchReason(
     Analyze the compatibility between these users and provide a compelling reason for connection:
     
     User 1 (${user1.name}):
-    - Core Values: ${user1.values.coreValues.join(', ')}
-    - Personal Goals: ${user1.values.personalGoals.join(', ')}
-    - Communication Preferences: ${user1.values.preferredCommunication.join(', ')}
+    - Core Values: ${(user1.values?.coreValues || []).join(', ')}
+    - Personal Goals: ${(user1.values?.personalGoals || []).join(', ')}
+    - Communication Preferences: ${(user1.values?.preferredCommunication || []).join(', ')}
     - Bio: ${user1.bio}
     
     User 2 (${user2.name}):
-    - Core Values: ${user2.values.coreValues.join(', ')}
-    - Personal Goals: ${user2.values.personalGoals.join(', ')}
-    - Communication Preferences: ${user2.values.preferredCommunication.join(', ')}
+    - Core Values: ${(user2.values?.coreValues || []).join(', ')}
+    - Personal Goals: ${(user2.values?.personalGoals || []).join(', ')}
+    - Communication Preferences: ${(user2.values?.preferredCommunication || []).join(', ')}
     - Bio: ${user2.bio}
     
     Compatibility Scores:
@@ -173,7 +352,7 @@ async function generateMatchReason(
   `;
 
   try {
-    const response = await generateResponse(prompt);
+    const response = await callOpenAI(prompt);
     return response || 'Strong compatibility based on shared values and goals';
   } catch (error) {
     console.error('Error generating match reason:', error);
@@ -191,22 +370,22 @@ export async function getMatchesForUser(userId: string): Promise<Match[]> {
   return [];
 }
 
-export const generateMatchInsights = async (
+export async function generateMatchInsights(
   userProfile: UserProfile,
   matchProfile: UserProfile
-): Promise<string> => {
+): Promise<string> {
   const prompt = `Analyze the potential match between these users:
 
     User 1 (${userProfile.name}):
-    - Core Values: ${userProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
+    - Core Values: ${(userProfile.values?.coreValues || []).join(', ')}
+    - Personal Goals: ${(userProfile.values?.personalGoals || []).join(', ')}
+    - Communication Preferences: ${(userProfile.values?.preferredCommunication || []).join(', ')}
     - Bio: ${userProfile.bio}
     
     User 2 (${matchProfile.name}):
-    - Core Values: ${matchProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${matchProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${matchProfile.values.preferredCommunication.join(', ')}
+    - Core Values: ${(matchProfile.values?.coreValues || []).join(', ')}
+    - Personal Goals: ${(matchProfile.values?.personalGoals || []).join(', ')}
+    - Communication Preferences: ${(matchProfile.values?.preferredCommunication || []).join(', ')}
     - Bio: ${matchProfile.bio}
     
     Provide a detailed analysis that includes:
@@ -220,119 +399,10 @@ export const generateMatchInsights = async (
     Keep the analysis professional and actionable.`;
 
   try {
-    const response = await generateResponse(prompt);
+    const response = await callOpenAI(prompt);
     return response;
   } catch (error) {
     console.error('Error generating match insights:', error);
     throw error;
   }
-};
-
-export const generateMatchSuggestions = async (
-  userProfile: UserProfile,
-  matchProfile: UserProfile
-): Promise<string[]> => {
-  const prompt = `Generate specific suggestions for this match:
-
-    User 1 (${userProfile.name}):
-    - Core Values: ${userProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
-    
-    User 2 (${matchProfile.name}):
-    - Core Values: ${matchProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${matchProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${matchProfile.values.preferredCommunication.join(', ')}
-    
-    Generate 3 specific suggestions that:
-    1. Leverage their shared values
-    2. Address their communication preferences
-    3. Support their individual goals
-    4. Create opportunities for growth
-    5. Build a strong foundation for connection
-    
-    Format each suggestion on a new line.`;
-
-  try {
-    const response = await generateResponse(prompt);
-    return response.split('\n').filter(Boolean);
-  } catch (error) {
-    console.error('Error generating match suggestions:', error);
-    throw error;
-  }
-};
-
-export const generateInitialMessage = async (
-  userProfile: UserProfile,
-  matchProfile: UserProfile
-): Promise<string> => {
-  const prompt = `Generate an initial message for this match:
-
-    Sender (${userProfile.name}):
-    - Core Values: ${userProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
-    - Bio: ${userProfile.bio}
-    
-    Recipient (${matchProfile.name}):
-    - Core Values: ${matchProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${matchProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${matchProfile.values.preferredCommunication.join(', ')}
-    - Bio: ${matchProfile.bio}
-    
-    Generate a message that:
-    1. References shared values or interests
-    2. Shows genuine interest in their goals
-    3. Is professional but friendly
-    4. Includes a specific question
-    5. Respects their communication preferences
-    6. Is concise but engaging
-    
-    Keep the message under 200 words.`;
-
-  try {
-    const response = await generateResponse(prompt);
-    return response;
-  } catch (error) {
-    console.error('Error generating initial message:', error);
-    throw error;
-  }
-};
-
-export const generateFollowUpQuestions = async (
-  userProfile: UserProfile,
-  matchProfile: UserProfile,
-  previousMessages: string[]
-): Promise<string[]> => {
-  const prompt = `Generate follow-up questions based on this conversation:
-
-    User 1 (${userProfile.name}):
-    - Core Values: ${userProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
-    
-    User 2 (${matchProfile.name}):
-    - Core Values: ${matchProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${matchProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${matchProfile.values.preferredCommunication.join(', ')}
-    
-    Previous Messages:
-    ${previousMessages.join('\n')}
-    
-    Generate 3 follow-up questions that:
-    1. Build on previous conversation topics
-    2. Explore shared interests deeper
-    3. Show active listening
-    4. Are open-ended and engaging
-    5. Respect their communication preferences
-    
-    Format each question on a new line.`;
-
-  try {
-    const response = await generateResponse(prompt);
-    return response.split('\n').filter(Boolean);
-  } catch (error) {
-    console.error('Error generating follow-up questions:', error);
-    throw error;
-  }
-}; 
+}

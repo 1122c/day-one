@@ -1,8 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import OpenAI from 'openai'
 
-console.log("🔑 OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
+console.log("🔑 OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? "✅ SET" : "❌ NOT SET");
+console.log("🔑 API Key length:", process.env.OPENAI_API_KEY?.length || 0);
 
+if (!process.env.OPENAI_API_KEY) {
+  console.error("❌ OPENAI_API_KEY is not set in environment variables");
+}
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -14,19 +18,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { type, data } = req.body
+    const { type, prompt, systemPrompt, data } = req.body
+    console.log("📝 Request received:", { type, prompt: prompt?.substring(0, 100), systemPrompt: systemPrompt?.substring(0, 100), dataKeys: Object.keys(data || {}) })
 
-    if (!type || !data) {
-      return res.status(400).json({ error: 'Missing type or data' })
+    // Handle new service-based requests
+    if (type === 'conversation' || type === 'matching') {
+      if (!prompt) {
+        return res.status(400).json({ error: 'Missing prompt' })
+      }
+
+      console.log("🤖 Making OpenAI API call for", type);
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt || 'You are a helpful assistant that helps people make meaningful connections.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        max_tokens: type === 'conversation' ? 500 : 300,
+        temperature: type === 'conversation' ? 0.8 : 0.7,
+      })
+
+      const result = completion.choices[0].message.content;
+      console.log("✅ OpenAI response received for", type, "length:", result?.length || 0);
+      return res.status(200).json({ suggestions: result })
     }
 
-    let prompt = ''
+    // Handle legacy requests
+    if (!data) {
+      return res.status(400).json({ error: 'Missing data' })
+    }
+
+    let legacyPrompt = ''
     let model = 'gpt-3.5-turbo'
 
     switch (type) {
       case 'match':
         const { userA, userB } = data
-        prompt = `Compare these two users for compatibility:
+        legacyPrompt = `Compare these two users for compatibility:
           A: ${JSON.stringify(userA)}
           B: ${JSON.stringify(userB)}
         `
@@ -34,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       case 'bio':
         const { values } = data
-        prompt = `Create a professional and engaging bio based on these values and goals:
+        legacyPrompt = `Create a professional and engaging bio based on these values and goals:
           Core Values: ${values.coreValues.join(', ')}
           Personal Goals: ${values.personalGoals.join(', ')}
           Communication Style: ${values.preferredCommunication.join(', ')}
@@ -44,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       case 'profile_suggestions':
         const { userProfile } = data
-        prompt = `Analyze this user profile and suggest improvements:
+        legacyPrompt = `Analyze this user profile and suggest improvements:
 
           Name: ${userProfile.name}
           Core Values: ${userProfile.values.coreValues.join(', ')}
@@ -65,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       case 'value_insights':
         const { userValues } = data
-        prompt = `Analyze these user values and provide insights about potential connections and growth areas:
+        legacyPrompt = `Analyze these user values and provide insights about potential connections and growth areas:
           Core Values: ${userValues.coreValues.join(', ')}
           Personal Goals: ${userValues.personalGoals.join(', ')}
           Communication Style: ${userValues.preferredCommunication.join(', ')}
@@ -74,22 +108,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         break
 
       case 'image':
-        prompt = data.prompt
+        legacyPrompt = data.prompt
         model = 'dall-e-3'
         break
 
       case 'text':
-        prompt = data.prompt
+        legacyPrompt = data.prompt
         break
 
       default:
         return res.status(400).json({ error: 'Invalid request type' })
     }
 
+    console.log("🤖 Generated prompt:", legacyPrompt.substring(0, 200) + (legacyPrompt.length > 200 ? "..." : ""));
+    
     if (type === 'image') {
       const response = await openai.images.generate({
         model: "dall-e-3",
-        prompt: prompt,
+        prompt: legacyPrompt,
         n: 1,
         size: "1024x1024",
       })
@@ -98,17 +134,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         throw new Error('No image generated')
       }
 
+      console.log("🖼️ Image generated successfully");
       return res.status(200).json({ result: response.data[0].url })
     } else {
+      console.log("💬 Making OpenAI API call...");
       const completion = await openai.chat.completions.create({
         model: model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: legacyPrompt }],
       })
 
-      return res.status(200).json({ result: completion.choices[0].message.content })
+      const result = completion.choices[0].message.content;
+      console.log("✅ OpenAI response received, length:", result?.length || 0);
+      return res.status(200).json({ result })
     }
   } catch (err: any) {
     console.error('OpenAI error:', err)
-    return res.status(500).json({ error: 'OpenAI request failed' })
+    console.error('Error details:', {
+      message: err.message,
+      status: err.status,
+      type: err.type,
+      code: err.code
+    })
+    return res.status(500).json({ 
+      error: 'OpenAI request failed',
+      details: err.message || 'Unknown error',
+      type: err.type || 'unknown'
+    })
   }
 } 

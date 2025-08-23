@@ -1,140 +1,184 @@
 import { UserProfile, Match } from '@/types/user';
-import { generateResponse } from './openaiService';
 
-export const generateConversationStarters = async (
-  userProfile: UserProfile,
-  matchProfile: UserProfile
-): Promise<string[]> => {
-  const prompt = `Generate 3 engaging conversation starters based on these user profiles:
-
-    User 1 (${userProfile.name}):
-    - Core Values: ${userProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    - Bio: ${userProfile.bio}
-    
-    User 2 (${matchProfile.name}):
-    - Core Values: ${matchProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${matchProfile.values.personalGoals.join(', ')}
-    - Bio: ${matchProfile.bio}
-    
-    Generate 3 conversation starters that:
-    1. Reference shared values or goals
-    2. Are open-ended and encourage discussion
-    3. Show genuine interest in the other person
-    4. Are professional but friendly
-    5. Avoid generic or cliché questions
-    
-    Format each starter on a new line.`;
-
+// Use the Next.js API route instead of direct OpenAI calls
+async function callOpenAI(prompt: string, systemPrompt: string = ''): Promise<string[]> {
   try {
-    const response = await generateResponse(prompt);
-    return response.split('\n').filter(Boolean);
+    const response = await fetch('/api/openai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt,
+        systemPrompt,
+        type: 'conversation'
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.suggestions || '';
+    
+    // Split by newlines and filter out empty lines
+    return content
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0 && !line.startsWith('#') && !line.match(/^\d+\./))
+      .slice(0, 5); // Return up to 5 suggestions
   } catch (error) {
-    console.error('Error generating conversation starters:', error);
-    throw error;
+    console.error('Error calling OpenAI API:', error);
+    return [];
   }
-};
+}
 
-export const generateIceBreakers = async (
-  userProfile: UserProfile,
-  matchProfile: UserProfile
-): Promise<string[]> => {
-  const prompt = `Generate 3 fun ice breaker activities based on these user profiles:
+export async function generateIceBreakers(
+  currentUser: UserProfile,
+  targetUser: UserProfile
+): Promise<string[]> {
+  const userContext = `
+    Current user: ${currentUser.name}
+    Bio: ${currentUser.bio || 'No bio provided'}
+    Interests: ${currentUser.interests?.join(', ') || 'Not specified'}
+    Core values: ${currentUser.values?.coreValues?.join(', ') || 'Not specified'}
+    Goals: ${currentUser.values?.personalGoals?.join(', ') || 'Not specified'}
+    
+    Target user: ${targetUser.name}
+    Bio: ${targetUser.bio || 'No bio provided'}
+    Interests: ${targetUser.interests?.join(', ') || 'Not specified'}
+  `;
 
-    User 1 (${userProfile.name}):
-    - Core Values: ${userProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
-    
-    User 2 (${matchProfile.name}):
-    - Core Values: ${matchProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${matchProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${matchProfile.values.preferredCommunication.join(', ')}
-    
-    Generate 3 ice breaker activities that:
-    1. Are appropriate for their communication preferences
-    2. Help build rapport quickly
-    3. Are engaging and fun
-    4. Can be done in a short time
-    5. Don't require special equipment
-    
-    Format each activity on a new line.`;
+  const prompt = `Based on these two profiles, generate 5 unique, engaging ice breaker questions that ${currentUser.name} could ask ${targetUser.name}. 
+  Make them personal, thoughtful, and likely to start a meaningful conversation.
+  Focus on shared interests or complementary values.
+  Keep each question concise (one sentence).
+  
+  ${userContext}`;
 
-  try {
-    const response = await generateResponse(prompt);
-    return response.split('\n').filter(Boolean);
-  } catch (error) {
-    console.error('Error generating ice breakers:', error);
-    throw error;
+  const systemPrompt = 'You are an expert at creating meaningful conversation starters that help people connect authentically. Create questions that are warm, genuine, and encourage sharing.';
+
+  const suggestions = await callOpenAI(prompt, systemPrompt);
+  
+  // Fallback suggestions if API fails
+  if (suggestions.length === 0) {
+    return [
+      "What inspired you to pursue your current path in life?",
+      "If you could have dinner with anyone, living or dead, who would it be and why?",
+      "What's something you're passionate about that most people don't know?",
+      "What's the best advice you've ever received?",
+      "If you could master any skill instantly, what would it be?"
+    ];
   }
-};
+  
+  return suggestions;
+}
 
-export const generateGrowthSuggestions = async (
-  userProfile: UserProfile,
-  matchProfile: UserProfile
-): Promise<string[]> => {
-  const prompt = `Generate 3 growth and learning opportunities based on these user profiles:
+export async function generateConversationStarters(
+  currentUser: UserProfile,
+  targetUser: UserProfile
+): Promise<string[]> {
+  const userContext = `
+    Current user: ${currentUser.name}
+    Occupation: ${currentUser.occupation || 'Not specified'}
+    Education: ${currentUser.education || 'Not specified'}
+    Core values: ${currentUser.values?.coreValues?.join(', ') || 'Not specified'}
+    Communication style: ${currentUser.values?.preferredCommunication?.join(', ') || 'Not specified'}
+    
+    Target user: ${targetUser.name}
+    Occupation: ${targetUser.occupation || 'Not specified'}
+    Interests: ${targetUser.interests?.join(', ') || 'Not specified'}
+  `;
 
-    User 1 (${userProfile.name}):
-    - Core Values: ${userProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    - Bio: ${userProfile.bio}
-    
-    User 2 (${matchProfile.name}):
-    - Core Values: ${matchProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${matchProfile.values.personalGoals.join(', ')}
-    - Bio: ${matchProfile.bio}
-    
-    Generate 3 growth opportunities that:
-    1. Leverage each person's strengths
-    2. Address areas for development
-    3. Are mutually beneficial
-    4. Are specific and actionable
-    5. Align with their values and goals
-    
-    Format each suggestion on a new line.`;
+  const prompt = `Generate 5 thoughtful discussion topics that ${currentUser.name} could bring up with ${targetUser.name}.
+  These should be deeper conversation starters that could lead to meaningful discussions about life, goals, or shared interests.
+  Make them open-ended and intellectually engaging.
+  
+  ${userContext}`;
 
-  try {
-    const response = await generateResponse(prompt);
-    return response.split('\n').filter(Boolean);
-  } catch (error) {
-    console.error('Error generating growth suggestions:', error);
-    throw error;
+  const systemPrompt = 'You are an expert at facilitating deep, meaningful conversations. Create discussion topics that encourage authentic sharing and connection.';
+
+  const suggestions = await callOpenAI(prompt, systemPrompt);
+  
+  // Fallback suggestions if API fails
+  if (suggestions.length === 0) {
+    return [
+      "How do you think technology is changing the way we form meaningful relationships?",
+      "What's a belief you held strongly in the past that you've since changed your mind about?",
+      "How do you balance personal growth with maintaining stability in your life?",
+      "What role does creativity play in your work or personal life?",
+      "What's something you wish more people understood about your field or passion?"
+    ];
   }
-};
+  
+  return suggestions;
+}
 
-export const generateConnectionInsights = async (
-  userProfile: UserProfile,
-  matchProfile: UserProfile
-): Promise<string> => {
-  const prompt = `Analyze the potential connection between these users:
+export async function generateGrowthSuggestions(
+  currentUser: UserProfile,
+  targetUser: UserProfile
+): Promise<string[]> {
+  const userContext = `
+    Current user: ${currentUser.name}
+    Personal goals: ${currentUser.values?.personalGoals?.join(', ') || 'Not specified'}
+    Core values: ${currentUser.values?.coreValues?.join(', ') || 'Not specified'}
+    
+    Target user: ${targetUser.name}
+    Bio: ${targetUser.bio || 'No bio provided'}
+  `;
 
-    User 1 (${userProfile.name}):
-    - Core Values: ${userProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${userProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${userProfile.values.preferredCommunication.join(', ')}
-    - Bio: ${userProfile.bio}
-    
-    User 2 (${matchProfile.name}):
-    - Core Values: ${matchProfile.values.coreValues.join(', ')}
-    - Personal Goals: ${matchProfile.values.personalGoals.join(', ')}
-    - Communication Preferences: ${matchProfile.values.preferredCommunication.join(', ')}
-    - Bio: ${matchProfile.bio}
-    
-    Provide a thoughtful analysis that includes:
-    1. Key areas of alignment
-    2. Potential challenges
-    3. Growth opportunities
-    4. Communication style compatibility
-    5. Specific ways they could support each other's goals
-    
-    Keep the analysis concise but insightful.`;
+  const prompt = `Generate 5 suggestions for how ${currentUser.name} and ${targetUser.name} could support each other's growth and goals.
+  These should be actionable ideas for collaboration, learning, or mutual support.
+  Focus on ways they could help each other grow personally or professionally.
+  
+  ${userContext}`;
 
-  try {
-    const response = await generateResponse(prompt);
-    return response;
-  } catch (error) {
-    console.error('Error generating connection insights:', error);
-    throw error;
+  const systemPrompt = 'You are a personal development coach focused on helping people form mutually beneficial connections that support growth.';
+
+  const suggestions = await callOpenAI(prompt, systemPrompt);
+  
+  // Fallback suggestions if API fails
+  if (suggestions.length === 0) {
+    return [
+      "Consider setting up a weekly accountability check-in to support each other's goals",
+      "Share resources and book recommendations related to your mutual interests",
+      "Collaborate on a small project that combines both of your skill sets",
+      "Exchange feedback on professional work or creative projects",
+      "Start a learning challenge together in an area you both want to improve"
+    ];
   }
-}; 
+  
+  return suggestions;
+}
+
+export async function generateFollowUpQuestions(
+  currentUser: UserProfile,
+  targetUser: UserProfile,
+  conversationHistory: string[]
+): Promise<string[]> {
+  const recentContext = conversationHistory.slice(-5).join('\n');
+  
+  const prompt = `Based on this conversation between ${currentUser.name} and ${targetUser.name}, generate 3 thoughtful follow-up questions to keep the conversation flowing naturally.
+  
+  Recent conversation:
+  ${recentContext}
+  
+  Create questions that:
+  - Build on what was just discussed
+  - Show genuine interest
+  - Encourage deeper sharing`;
+
+  const suggestions = await callOpenAI(prompt);
+  
+  // Fallback suggestions
+  if (suggestions.length === 0) {
+    return [
+      "That's really interesting! Can you tell me more about that experience?",
+      "How did that shape your perspective on things?",
+      "What was the most challenging part of that journey?"
+    ];
+  }
+  
+  return suggestions.slice(0, 3);
+} 

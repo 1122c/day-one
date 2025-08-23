@@ -36,22 +36,66 @@ export default function AISuggestions({
   const [showOnlyNew, setShowOnlyNew] = useState(false);
 
   useEffect(() => {
-    // Generate suggestions if we have a match and matched user, or if we just have a current user for general suggestions
-    if ((match && matchedUser) || (currentUser && !match && !matchedUser)) {
+    console.log("🔍 AISuggestions useEffect triggered:", {
+      hasMatch: !!match,
+      hasMatchedUser: !!matchedUser,
+      hasCurrentUser: !!currentUser,
+      currentUserData: currentUser ? {
+        name: currentUser.name,
+        hasValues: !!currentUser.values,
+        coreValues: currentUser.values?.coreValues,
+        personalGoals: currentUser.values?.personalGoals,
+        preferredCommunication: currentUser.values?.preferredCommunication
+      } : null
+    });
+    
+    // Only generate suggestions if we don't already have them and have a current user
+    if (currentUser && suggestions.length === 0 && !loading) {
+      console.log("🚀 Generating initial suggestions");
       generateSuggestions();
+    } else if (currentUser && suggestions.length > 0) {
+      console.log("✅ Already have suggestions, skipping generation");
     }
-  }, [match, matchedUser, conversationHistory, currentUser]);
+  }, [match?.id, matchedUser?.id, conversationHistory.length, currentUser?.id]); // Use stable IDs instead of objects
+
+  // Monitor suggestions state changes
+  useEffect(() => {
+    console.log("📊 Suggestions state changed:", {
+      count: suggestions.length,
+      loading,
+      generationCount
+    });
+    
+    // If we have suggestions and we're not loading, don't generate more
+    if (suggestions.length > 0 && !loading && generationCount > 0) {
+      console.log("✅ Already have suggestions, skipping regeneration");
+      return;
+    }
+  }, [suggestions, loading, generationCount]);
 
   const generateSuggestions = async (isNewGeneration: boolean = false) => {
-    // If we have a match and matched user, generate match-specific suggestions
-    if (match && matchedUser) {
-      await generateMatchSpecificSuggestions(isNewGeneration);
-    } 
-    // If we just have a current user, generate general suggestions
-    else if (currentUser) {
+    // Prevent multiple simultaneous calls
+    if (loading) {
+      console.log("🚫 generateSuggestions called while already loading, skipping");
+      return;
+    }
+
+    console.log("🚀 generateSuggestions called:", {
+      hasMatch: !!match,
+      hasMatchedUser: !!matchedUser,
+      hasCurrentUser: !!currentUser,
+      willCallMatchSpecific: !!(match && matchedUser),
+      willCallGeneral: !!(currentUser && (!match || !matchedUser))
+    });
+    
+    // For now, always use general suggestions to ensure they work
+    // TODO: Fix match-specific suggestions later
+    if (currentUser) {
+      console.log("🌟 Calling generateGeneralSuggestions for general use");
       await generateGeneralSuggestions(isNewGeneration);
     }
     else {
+      console.log("❌ No conditions met for generating suggestions");
       return;
     }
   };
@@ -157,30 +201,43 @@ export default function AISuggestions({
   };
 
   const generateGeneralSuggestions = async (isNewGeneration: boolean = false) => {
+    console.log("🌟 generateGeneralSuggestions called with currentUser:", currentUser);
     if (!currentUser) return;
+    
+    // Double-check loading state
+    if (loading) {
+      console.log("🚫 generateGeneralSuggestions called while already loading, skipping");
+      return;
+    }
 
     setLoading(true);
+    
+    // Add a timeout to prevent loading state from getting stuck
+    const loadingTimeout = setTimeout(() => {
+      console.log("⏰ Loading timeout reached, resetting loading state");
+      setLoading(false);
+    }, 30000); // 30 second timeout
+    
     try {
-      // For general suggestions, we need to create a mock profile to generate AI suggestions
-      // This simulates having a matched user for the AI to work with
+      // For general suggestions, create a flexible mock profile that works for any conversation
       const mockProfile: UserProfile = {
-        id: 'mock-profile',
-        name: 'Potential Match',
-        email: 'mock@example.com',
-        bio: 'A potential connection with shared interests and values',
+        id: 'general-conversation',
+        name: 'New Connection',
+        email: 'new@connection.com',
+        bio: 'Someone you\'d like to start a conversation with',
         age: '25',
-        location: 'Your area',
-        occupation: 'Professional',
-        education: 'Bachelor\'s degree',
-        interests: ['Networking', 'Personal Growth', 'Professional Development'],
+        location: 'Various locations',
+        occupation: 'Various professions',
+        education: 'Various backgrounds',
+        interests: ['Networking', 'Learning', 'Growth', 'Connection'],
         socialProfiles: [],
         values: {
-          coreValues: ['Growth', 'Connection', 'Authenticity'],
-          personalGoals: ['Build meaningful relationships', 'Learn from others', 'Share experiences'],
-          preferredCommunication: ['Direct', 'Respectful', 'Engaging'],
+          coreValues: ['Growth', 'Connection', 'Authenticity', 'Learning'],
+          personalGoals: ['Build relationships', 'Learn from others', 'Share experiences', 'Network'],
+          preferredCommunication: ['Respectful', 'Engaging', 'Professional', 'Friendly'],
           availability: {
-            timezone: 'UTC',
-            preferredTimes: ['Evening', 'Weekend'],
+            timezone: 'Various',
+            preferredTimes: ['Flexible'],
           },
         },
         privacy: {
@@ -188,6 +245,7 @@ export default function AISuggestions({
           showEmail: false,
           showSocialProfiles: true,
           allowMessaging: true,
+          messageSource: 'anyone',
           showOnlineStatus: true,
           showReadReceipts: true,
           showTypingIndicators: true,
@@ -197,12 +255,42 @@ export default function AISuggestions({
         updatedAt: new Date(),
       };
 
+      console.log("🤖 About to call conversation service functions");
+      console.log("🤖 Current user data:", {
+        name: currentUser.name,
+        hasValues: !!currentUser.values,
+        coreValues: currentUser.values?.coreValues,
+        personalGoals: currentUser.values?.personalGoals,
+        bio: currentUser.bio
+      });
+      console.log("🤖 Mock profile data:", {
+        name: mockProfile.name,
+        bio: mockProfile.bio
+      });
+      
       // Generate AI-powered suggestions using the conversation service
       const [iceBreakers, conversationStarters, growthSuggestions] = await Promise.all([
         generateIceBreakers(currentUser, mockProfile),
         generateConversationStarters(currentUser, mockProfile),
         generateGrowthSuggestions(currentUser, mockProfile),
       ]);
+      console.log("✅ Conversation service calls completed:", {
+        iceBreakersCount: iceBreakers.length,
+        conversationStartersCount: conversationStarters.length,
+        growthSuggestionsCount: growthSuggestions.length
+      });
+      
+      console.log("📝 Raw AI responses:", {
+        iceBreakers,
+        conversationStarters,
+        growthSuggestions
+      });
+
+      // Validate that we got actual content from the AI
+      if (!iceBreakers.length && !conversationStarters.length && !growthSuggestions.length) {
+        console.error("❌ All AI responses are empty - this suggests an API issue");
+        throw new Error("AI responses are empty");
+      }
 
       const newSuggestions: Suggestion[] = [
         // Ice Breakers from AI
@@ -251,18 +339,36 @@ export default function AISuggestions({
         },
       ];
 
+      console.log("🎯 Created suggestions array:", newSuggestions);
+      console.log("🎯 Suggestions breakdown:", {
+        conversationStarters: newSuggestions.filter(s => s.type === 'conversation_starter').length,
+        followUps: newSuggestions.filter(s => s.type === 'follow_up').length,
+        profileTips: newSuggestions.filter(s => s.type === 'profile_tip').length,
+        connectionIdeas: newSuggestions.filter(s => s.type === 'connection_idea').length,
+        total: newSuggestions.length
+      });
+      
       if (isNewGeneration) {
         // Add new suggestions to existing ones
-        setSuggestions(prev => [...prev, ...newSuggestions]);
+        setSuggestions(prev => {
+          const newState = [...prev, ...newSuggestions];
+          console.log("➕ Added to existing suggestions. New state:", newState.length);
+          return newState;
+        });
         setGenerationCount(prev => prev + 1);
+        console.log("➕ Added to existing suggestions");
       } else {
         // Replace all suggestions (initial load)
         setSuggestions(newSuggestions);
-        setGenerationCount(1);
+        setGenerationCount(prev => prev + 1);
+        console.log("🔄 Replaced all suggestions with", newSuggestions.length, "items");
       }
     } catch (error) {
       console.error('Error generating general suggestions:', error);
+      console.error('Error details:', error);
     } finally {
+      clearTimeout(loadingTimeout);
+      console.log("🏁 Setting loading to false");
       setLoading(false);
     }
   };
@@ -292,6 +398,12 @@ export default function AISuggestions({
   };
 
   const getFilteredSuggestions = () => {
+    console.log("🔍 getFilteredSuggestions called with:", {
+      totalSuggestions: suggestions.length,
+      activeTab,
+      showOnlyNew
+    });
+    
     let filtered = suggestions;
     
     // Sort by recency (newest first)
@@ -301,18 +413,28 @@ export default function AISuggestions({
       filtered = filtered.filter(s => isNewSuggestion(s.timestamp));
     }
     
-    switch (activeTab) {
-      case 'ice-breakers':
-        return filtered.filter(s => s.type === 'conversation_starter');
-      case 'discussion-starters':
-        return filtered.filter(s => s.type === 'follow_up');
-      case 'profile':
-        return filtered.filter(s => s.type === 'profile_tip');
-      case 'connections':
-        return filtered.filter(s => s.type === 'connection_idea');
-      default:
-        return filtered;
-    }
+    const result = (() => {
+      switch (activeTab) {
+        case 'ice-breakers':
+          return filtered.filter(s => s.type === 'conversation_starter');
+        case 'discussion-starters':
+          return filtered.filter(s => s.type === 'follow_up');
+        case 'profile':
+          return filtered.filter(s => s.type === 'profile_tip');
+        case 'connections':
+          return filtered.filter(s => s.type === 'connection_idea');
+        default:
+          return filtered;
+      }
+    })();
+    
+    console.log("🔍 Filtered suggestions result:", {
+      activeTab,
+      resultCount: result.length,
+      resultTypes: result.map(s => s.type)
+    });
+    
+    return result;
   };
 
   const getTabIcon = (tab: string) => {
@@ -360,6 +482,13 @@ export default function AISuggestions({
     const diffInMinutes = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60));
     return diffInMinutes < 5; // Consider suggestions "new" if generated within last 5 minutes
   };
+
+  console.log("🎨 AISuggestions render:", {
+    loading,
+    suggestionsCount: suggestions.length,
+    activeTab,
+    filteredSuggestionsCount: getFilteredSuggestions().length
+  });
 
   if (loading) {
     return (

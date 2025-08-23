@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebase';
+can import { db } from '@/lib/firebase';
 import {
   collection,
   doc,
