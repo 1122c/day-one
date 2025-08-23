@@ -1,7 +1,7 @@
 import { Message } from '@/types/chat';
 
 export interface WebSocketMessage {
-  type: 'message' | 'typing' | 'read' | 'online' | 'offline';
+  type: 'message' | 'typing' | 'read' | 'online' | 'offline' | 'match' | 'profile_view' | 'connection_request' | 'system';
   data: any;
   timestamp: number;
 }

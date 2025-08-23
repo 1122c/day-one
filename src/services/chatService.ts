@@ -1,4 +1,5 @@
 import { db } from '@/lib/firebase';
+import { Message } from '@/types/chat';
 import {
   collection,
   addDoc,
@@ -9,23 +10,16 @@ import {
   serverTimestamp,
   Timestamp,
   DocumentData,
+  doc,
+  updateDoc,
 } from 'firebase/firestore';
-
-export interface Message {
-  id?: string;
-  matchId: string;
-  senderId: string;
-  content: string;
-  createdAt: Date | Timestamp;
-  status: 'sent' | 'delivered' | 'read';
-}
 
 export async function sendMessage(message: Omit<Message, 'id' | 'createdAt'>): Promise<Message> {
   const messagesRef = collection(db, 'messages');
   const newMessage = {
     ...message,
     createdAt: serverTimestamp(),
-    status: 'sent',
+    status: 'sent' as const,
   };
   
   const docRef = await addDoc(messagesRef, newMessage);
@@ -59,7 +53,7 @@ export async function markMessageAsRead(messageId: string): Promise<void> {
   
   if (!snapshot.empty) {
     const docRef = snapshot.docs[0].ref;
-    await docRef.update({
+    await updateDoc(docRef, {
       status: 'read',
     });
   }

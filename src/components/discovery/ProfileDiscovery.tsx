@@ -60,6 +60,9 @@ export default function ProfileDiscovery({
         showSocialProfiles: true,
         allowMessaging: true,
         showOnlineStatus: true,
+        showReadReceipts: true,
+        showTypingIndicators: true,
+        allowProfileViews: true,
       },
     },
     {
@@ -84,6 +87,9 @@ export default function ProfileDiscovery({
         showSocialProfiles: true,
         allowMessaging: true,
         showOnlineStatus: true,
+        showReadReceipts: true,
+        showTypingIndicators: true,
+        allowProfileViews: true,
       },
     },
     {
@@ -108,6 +114,9 @@ export default function ProfileDiscovery({
         showSocialProfiles: true,
         allowMessaging: true,
         showOnlineStatus: true,
+        showReadReceipts: true,
+        showTypingIndicators: true,
+        allowProfileViews: true,
       },
     },
   ];

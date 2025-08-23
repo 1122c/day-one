@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UserProfile, Match } from '@/types/user';
 import { generateMatchSuggestions, generateInitialMessage, generateFollowUpQuestions } from '@/services/matchingService';
-import { FiZap, FiMessageSquare, FiTarget, FiRefreshCw, FiCopy, FiCheck } from 'react-icons/fi';
+import { FiZap, FiMessageSquare, FiTarget, FiRefreshCw, FiCopy, FiCheck, FiPlus, FiX } from 'react-icons/fi';
 
 interface AISuggestionsProps {
   currentUser: UserProfile;
@@ -17,6 +17,7 @@ interface Suggestion {
   content: string;
   category: string;
   used: boolean;
+  timestamp: Date;
 }
 
 export default function AISuggestions({
@@ -30,6 +31,8 @@ export default function AISuggestions({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'conversation' | 'profile' | 'connections'>('conversation');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [generationCount, setGenerationCount] = useState(0);
+  const [showOnlyNew, setShowOnlyNew] = useState(false);
 
   useEffect(() => {
     if (match && matchedUser) {
@@ -37,7 +40,7 @@ export default function AISuggestions({
     }
   }, [match, matchedUser, conversationHistory]);
 
-  const generateSuggestions = async () => {
+  const generateSuggestions = async (isNewGeneration: boolean = false) => {
     if (!match || !matchedUser) return;
 
     setLoading(true);
@@ -53,50 +56,93 @@ export default function AISuggestions({
       const newSuggestions: Suggestion[] = [
         // Conversation starters
         {
-          id: 'initial-1',
+          id: `initial-${Date.now()}-${Math.random()}`,
           type: 'conversation_starter',
           content: initialMessage,
           category: 'First Message',
           used: false,
+          timestamp: new Date(),
         },
         ...followUpQuestions.map((question, index) => ({
-          id: `followup-${index}`,
+          id: `followup-${Date.now()}-${index}-${Math.random()}`,
           type: 'follow_up' as const,
           content: question,
           category: 'Follow-up Question',
           used: false,
+          timestamp: new Date(),
         })),
         // Match suggestions
         ...matchSuggestions.map((suggestion, index) => ({
-          id: `suggestion-${index}`,
+          id: `suggestion-${Date.now()}-${index}-${Math.random()}`,
           type: 'connection_idea' as const,
           content: suggestion,
           category: 'Connection Idea',
           used: false,
+          timestamp: new Date(),
         })),
         // Profile tips
         {
-          id: 'profile-1',
+          id: `profile-1-${Date.now()}-${Math.random()}`,
           type: 'profile_tip',
           content: 'Consider adding more specific examples of your work or interests to make your profile more engaging.',
           category: 'Profile Enhancement',
           used: false,
+          timestamp: new Date(),
         },
         {
-          id: 'profile-2',
+          id: `profile-2-${Date.now()}-${Math.random()}`,
           type: 'profile_tip',
           content: 'Your core values are well-defined. Try adding how you live these values in your daily life.',
           category: 'Profile Enhancement',
           used: false,
+          timestamp: new Date(),
         },
       ];
 
-      setSuggestions(newSuggestions);
+      if (isNewGeneration) {
+        // Add new suggestions to existing ones
+        setSuggestions(prev => [...prev, ...newSuggestions]);
+        setGenerationCount(prev => prev + 1);
+      } else {
+        // Replace all suggestions (initial load)
+        setSuggestions(newSuggestions);
+        setGenerationCount(1);
+      }
     } catch (error) {
       console.error('Error generating suggestions:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateFollowUpSuggestions = async () => {
+    if (!match || !matchedUser || conversationHistory.length === 0) return;
+
+    setLoading(true);
+    try {
+      const followUpQuestions = await generateFollowUpQuestions(currentUser, matchedUser, conversationHistory);
+      
+      const newFollowUpSuggestions: Suggestion[] = followUpQuestions.map((question, index) => ({
+        id: `followup-new-${Date.now()}-${index}-${Math.random()}`,
+        type: 'follow_up' as const,
+        content: question,
+        category: 'Follow-up Question',
+        used: false,
+        timestamp: new Date(),
+      }));
+
+      setSuggestions(prev => [...prev, ...newFollowUpSuggestions]);
+      setGenerationCount(prev => prev + 1);
+    } catch (error) {
+      console.error('Error generating follow-up suggestions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearOldSuggestions = () => {
+    setSuggestions([]);
+    setGenerationCount(0);
   };
 
   const handleUseSuggestion = (suggestion: Suggestion) => {
@@ -119,17 +165,26 @@ export default function AISuggestions({
   };
 
   const getFilteredSuggestions = () => {
+    let filtered = suggestions;
+    
+    // Sort by recency (newest first)
+    filtered = [...filtered].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    if (showOnlyNew) {
+      filtered = filtered.filter(s => isNewSuggestion(s.timestamp));
+    }
+    
     switch (activeTab) {
       case 'conversation':
-        return suggestions.filter(s => 
+        return filtered.filter(s => 
           s.type === 'conversation_starter' || s.type === 'follow_up'
         );
       case 'profile':
-        return suggestions.filter(s => s.type === 'profile_tip');
+        return filtered.filter(s => s.type === 'profile_tip');
       case 'connections':
-        return suggestions.filter(s => s.type === 'connection_idea');
+        return filtered.filter(s => s.type === 'connection_idea');
       default:
-        return suggestions;
+        return filtered;
     }
   };
 
@@ -161,6 +216,22 @@ export default function AISuggestions({
     }
   };
 
+  const getRelativeTime = (timestamp: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hour${Math.floor(diffInMinutes / 60) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(diffInMinutes / 1440)} day${Math.floor(diffInMinutes / 1440) > 1 ? 's' : ''} ago`;
+  };
+
+  const isNewSuggestion = (timestamp: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60));
+    return diffInMinutes < 5; // Consider suggestions "new" if generated within last 5 minutes
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -180,14 +251,51 @@ export default function AISuggestions({
           <div className="flex items-center space-x-2">
             <FiZap className="h-5 w-5 text-indigo-600" />
             <h3 className="text-lg font-medium text-gray-900">AI Suggestions</h3>
+            {suggestions.length > 0 && (
+              <span className="text-sm text-gray-500">({suggestions.length} suggestions)</span>
+            )}
+            {generationCount > 0 && (
+              <span className="text-sm text-gray-500">• Generated {generationCount} time{generationCount > 1 ? 's' : ''}</span>
+            )}
           </div>
-          <button
-            onClick={generateSuggestions}
-            className="flex items-center space-x-1 text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
-          >
-            <FiRefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            {conversationHistory.length > 0 && (
+              <button
+                onClick={generateFollowUpSuggestions}
+                disabled={loading}
+                className="flex items-center space-x-1 px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiMessageSquare className="h-4 w-4" />
+                <span>Generate Follow-ups</span>
+              </button>
+            )}
+            <button
+              onClick={() => generateSuggestions(true)}
+              disabled={loading}
+              className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiPlus className="h-4 w-4" />
+              <span>Generate More</span>
+            </button>
+            <button
+              onClick={() => generateSuggestions(false)}
+              disabled={loading}
+              className="flex items-center space-x-1 text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiRefreshCw className="h-4 w-4" />
+              <span>Refresh All</span>
+            </button>
+            {suggestions.length > 0 && (
+              <button
+                onClick={clearOldSuggestions}
+                disabled={loading}
+                className="flex items-center space-x-1 px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiX className="h-4 w-4" />
+                <span>Clear All</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -223,6 +331,25 @@ export default function AISuggestions({
 
       {/* Suggestions */}
       <div className="p-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <button
+            onClick={() => setShowOnlyNew(!showOnlyNew)}
+            className={`flex items-center space-x-1 px-3 py-2 text-sm rounded-md transition-colors duration-200 ${
+              showOnlyNew 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+            }`}
+          >
+            <FiPlus className="h-4 w-4" />
+            <span>{showOnlyNew ? 'Show All' : 'Show New Only'}</span>
+          </button>
+          <span className="text-sm text-gray-500">
+            {showOnlyNew 
+              ? `${getFilteredSuggestions().length} new suggestions`
+              : `${getFilteredSuggestions().length} total suggestions`
+            }
+          </span>
+        </div>
         <div className="space-y-4">
           {getFilteredSuggestions().map((suggestion) => (
             <div
@@ -242,6 +369,14 @@ export default function AISuggestions({
                         Used
                       </span>
                     )}
+                    {isNewSuggestion(suggestion.timestamp) && (
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                        New
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-500">
+                      {getRelativeTime(suggestion.timestamp)}
+                    </span>
                   </div>
                   <p className="text-sm leading-relaxed">{suggestion.content}</p>
                 </div>

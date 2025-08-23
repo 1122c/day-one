@@ -15,7 +15,7 @@ import {
 export interface Notification {
   id?: string;
   userId: string;
-  type: 'match' | 'message' | 'system';
+  type: 'match' | 'message' | 'system' | 'profile_view' | 'connection_request';
   title: string;
   message: string;
   read: boolean;
@@ -23,7 +23,10 @@ export interface Notification {
   data?: {
     matchId?: string;
     messageId?: string;
+    viewerId?: string;
+    senderId?: string;
   };
+  priority?: 'low' | 'medium' | 'high';
 }
 
 export async function createNotification(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification> {

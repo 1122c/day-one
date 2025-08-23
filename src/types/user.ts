@@ -29,6 +29,9 @@ export interface UserProfile {
     showSocialProfiles: boolean;
     allowMessaging: boolean;
     showOnlineStatus: boolean;
+    showReadReceipts: boolean;
+    showTypingIndicators: boolean;
+    allowProfileViews: boolean;
   };
 }
 

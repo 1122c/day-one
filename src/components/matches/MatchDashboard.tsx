@@ -53,6 +53,9 @@ export default function MatchDashboard({
             showSocialProfiles: true,
             allowMessaging: true,
             showOnlineStatus: true,
+            showReadReceipts: true,
+            showTypingIndicators: true,
+            allowProfileViews: true,
           },
         },
         {
@@ -77,6 +80,9 @@ export default function MatchDashboard({
             showSocialProfiles: true,
             allowMessaging: true,
             showOnlineStatus: true,
+            showReadReceipts: true,
+            showTypingIndicators: true,
+            allowProfileViews: true,
           },
         },
       ];
