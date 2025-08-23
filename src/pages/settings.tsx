@@ -118,6 +118,104 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
+                {/* Profile Picture */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Profile Picture
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0">
+                      {profile.profilePicture ? (
+                        <img
+                          src={profile.profilePicture}
+                          alt="Profile"
+                          className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
+                        />
+                      ) : (
+                        <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+                          <FiUser className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    {isEditing && (
+                      <div className="flex-1 space-y-3">
+                        {/* File Upload */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Upload from computer
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                // Create a local URL for preview
+                                const imageUrl = URL.createObjectURL(file);
+                                const updatedProfile = {
+                                  ...profile,
+                                  profilePicture: imageUrl
+                                };
+                                setProfile(updatedProfile);
+                                
+                                // Store the file for later upload
+                                // Note: In a real app, you'd upload this to a service like Firebase Storage
+                                console.log('File selected:', file.name, 'Size:', file.size);
+                              }
+                            }}
+                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            Supported formats: JPG, PNG, GIF (max 5MB)
+                          </p>
+                        </div>
+                        
+                        {/* URL Input */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Or use image URL
+                          </label>
+                          <input
+                            type="url"
+                            value={profile.profilePicture || ''}
+                            onChange={(e) => {
+                              const updatedProfile = {
+                                ...profile,
+                                profilePicture: e.target.value
+                              };
+                              setProfile(updatedProfile);
+                            }}
+                            placeholder="Enter image URL (optional)"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            Paste a direct image URL (e.g., from Imgur, your website, etc.)
+                          </p>
+                        </div>
+                        
+                        {/* Remove Picture Option */}
+                        {profile.profilePicture && (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedProfile = {
+                                  ...profile,
+                                  profilePicture: undefined
+                                };
+                                setProfile(updatedProfile);
+                              }}
+                              className="text-sm text-red-600 hover:text-red-700 font-medium"
+                            >
+                              Remove profile picture
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Bio

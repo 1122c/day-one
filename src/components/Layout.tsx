@@ -1,9 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/router';
-import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings, FiMessageSquare } from 'react-icons/fi';
+import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings, FiMessageSquare, FiBell, FiChevronDown } from 'react-icons/fi';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,12 +11,24 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [user, loading] = useAuthState(auth);
+  const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setSettingsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navigation = [
     { name: 'Home', href: '/', icon: FiHome },
     { name: 'Discover', href: '/discover', icon: FiSearch },
-    { name: 'Messages', href: '/messages', icon: FiMessageSquare },
     { name: 'Suggested Users', href: '/matches', icon: FiHeart },
     { name: 'Connections', href: '/connections', icon: FiUsers },
   ];
@@ -73,25 +85,59 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex items-center space-x-4">
               {!loading && user && (
                 <>
+                  <Link
+                    href="/messages"
+                    className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200"
+                    title="Messages"
+                  >
+                    <FiMessageSquare className="h-5 w-5 mr-1" />
+                    Messages
+                  </Link>
+                  <Link
+                    href="/notifications"
+                    className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200"
+                    title="Notifications"
+                  >
+                    <FiBell className="h-5 w-5 mr-1" />
+                    Notifications
+                  </Link>
                   <div className="flex items-center space-x-2 bg-indigo-50 px-3 py-1 rounded-full">
                     <div className="w-8 h-8 bg-indigo-200 rounded-full flex items-center justify-center font-bold text-indigo-700">
                       {user.displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <span className="text-sm font-medium text-gray-700 truncate max-w-[120px]">{user.displayName || user.email}</span>
                   </div>
-                  <Link
-                    href="/settings"
-                    className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
-                    title="Settings"
-                  >
-                    <FiSettings className="h-5 w-5" />
-                  </Link>
-                  <button
-                    onClick={() => auth.signOut()}
-                    className="px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                  >
-                    Sign Out
-                  </button>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
+                      className="flex items-center p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200 rounded-md hover:bg-gray-100"
+                      title="Settings"
+                    >
+                      <FiSettings className="h-5 w-5" />
+                      <FiChevronDown className="h-4 w-4 ml-1" />
+                    </button>
+                    
+                    {settingsDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                        <Link
+                          href="/settings"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-700"
+                          onClick={() => setSettingsDropdownOpen(false)}
+                        >
+                          Settings
+                        </Link>
+                        <button
+                          onClick={() => {
+                            auth.signOut();
+                            setSettingsDropdownOpen(false);
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-700"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
               {!loading && !user && (

@@ -19,6 +19,7 @@ export interface UserProfile {
   id: string;
   email: string;
   name: string;
+  profilePicture?: string;
   bio?: string;
   age?: string;
   location?: string;
