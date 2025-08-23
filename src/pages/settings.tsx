@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import PrivacySettings from '@/components/settings/PrivacySettings';
 import { UserProfile } from '@/types/user';
-import { getUserProfile } from '@/services/firebaseService';
+import { getUserProfile, saveUserProfile } from '@/services/firebaseService';
 import { FiUser, FiShield, FiBell, FiGlobe, FiSave, FiEdit3 } from 'react-icons/fi';
 
 export default function SettingsPage() {
@@ -93,6 +93,13 @@ export default function SettingsPage() {
                     <input
                       type="text"
                       value={profile.name || ''}
+                      onChange={(e) => {
+                        const updatedProfile = {
+                          ...profile,
+                          name: e.target.value
+                        };
+                        setProfile(updatedProfile);
+                      }}
                       disabled={!isEditing}
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
                     />
@@ -118,6 +125,13 @@ export default function SettingsPage() {
                   <textarea
                     rows={4}
                     value={profile.bio || ''}
+                    onChange={(e) => {
+                      const updatedProfile = {
+                        ...profile,
+                        bio: e.target.value
+                      };
+                      setProfile(updatedProfile);
+                    }}
                     disabled={!isEditing}
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
                     placeholder="Tell us about yourself..."
@@ -133,6 +147,13 @@ export default function SettingsPage() {
                     <input
                       type="text"
                       value={profile.age || ''}
+                      onChange={(e) => {
+                        const updatedProfile = {
+                          ...profile,
+                          age: e.target.value
+                        };
+                        setProfile(updatedProfile);
+                      }}
                       disabled={!isEditing}
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="e.g., 25"
@@ -145,6 +166,13 @@ export default function SettingsPage() {
                     <input
                       type="text"
                       value={profile.location || ''}
+                      onChange={(e) => {
+                        const updatedProfile = {
+                          ...profile,
+                          location: e.target.value
+                        };
+                        setProfile(updatedProfile);
+                      }}
                       disabled={!isEditing}
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="City, State/Country"
@@ -160,6 +188,13 @@ export default function SettingsPage() {
                     <input
                       type="text"
                       value={profile.occupation || ''}
+                      onChange={(e) => {
+                        const updatedProfile = {
+                          ...profile,
+                          occupation: e.target.value
+                        };
+                        setProfile(updatedProfile);
+                      }}
                       disabled={!isEditing}
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="Your profession or role"
@@ -172,10 +207,17 @@ export default function SettingsPage() {
                     <input
                       type="text"
                       value={profile.education || ''}
+                      onChange={(e) => {
+                        const updatedProfile = {
+                          ...profile,
+                          education: e.target.value
+                        };
+                        setProfile(updatedProfile);
+                      }}
                       disabled={!isEditing}
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="Degree, institution, or learning path"
-                    />
+                      />
                   </div>
                 </div>
 
@@ -186,6 +228,14 @@ export default function SettingsPage() {
                   <textarea
                     rows={3}
                     value={profile.interests?.join(', ') || ''}
+                    onChange={(e) => {
+                      const interestsArray = e.target.value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+                      const updatedProfile = {
+                        ...profile,
+                        interests: interestsArray
+                      };
+                      setProfile(updatedProfile);
+                    }}
                     disabled={!isEditing}
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
                     placeholder="Your interests, hobbies, or passions (comma-separated)"
@@ -238,13 +288,53 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Core Values
                   </label>
-                  <textarea
-                    rows={3}
-                    value={profile.values?.coreValues?.join(', ') || ''}
-                    disabled={!isEditing}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    placeholder="Your core values and principles (comma-separated)"
-                  />
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      {[
+                        'Authenticity', 'Growth', 'Connection', 'Empathy', 'Innovation',
+                        'Collaboration', 'Balance', 'Purpose', 'Creativity', 'Leadership',
+                        'Learning', 'Community', 'Adventure', 'Stability', 'Excellence', 'Compassion'
+                      ].map((value) => (
+                        <label key={value} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={profile.values?.coreValues?.includes(value) || false}
+                            onChange={(e) => {
+                              const currentValues = profile.values?.coreValues || [];
+                              const newValues = e.target.checked
+                                ? [...currentValues, value]
+                                : currentValues.filter(v => v !== value);
+                              
+                              const updatedProfile = {
+                                ...profile,
+                                values: {
+                                  ...profile.values,
+                                  coreValues: newValues
+                                }
+                              };
+                              setProfile(updatedProfile);
+                            }}
+                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">{value}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.values?.coreValues?.map((value) => (
+                        <span
+                          key={value}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                        >
+                          {value}
+                        </span>
+                      ))}
+                      {(!profile.values?.coreValues || profile.values.coreValues.length === 0) && (
+                        <span className="text-gray-500 text-sm">No core values selected</span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Personal Goals */}
@@ -252,13 +342,55 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Personal Goals
                   </label>
-                  <textarea
-                    rows={3}
-                    value={profile.values?.personalGoals?.join(', ') || ''}
-                    disabled={!isEditing}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    placeholder="Your personal and professional goals (comma-separated)"
-                  />
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      {[
+                        'Professional Networking', 'Mentorship', 'Friendship', 'Collaboration',
+                        'Learning', 'Support', 'Career Growth', 'Skill Development',
+                        'Business Partnership', 'Creative Projects', 'Personal Development',
+                        'Community Building', 'Travel & Adventure', 'Health & Wellness',
+                        'Financial Success', 'Social Impact'
+                      ].map((goal) => (
+                        <label key={goal} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={profile.values?.personalGoals?.includes(goal) || false}
+                            onChange={(e) => {
+                              const currentGoals = profile.values?.personalGoals || [];
+                              const newGoals = e.target.checked
+                                ? [...currentGoals, goal]
+                                : currentGoals.filter(g => g !== goal);
+                              
+                              const updatedProfile = {
+                                ...profile,
+                                values: {
+                                  ...profile.values,
+                                  personalGoals: newGoals
+                                }
+                              };
+                              setProfile(updatedProfile);
+                            }}
+                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">{goal}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.values?.personalGoals?.map((goal) => (
+                        <span
+                          key={goal}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                        >
+                          {goal}
+                        </span>
+                      ))}
+                      {(!profile.values?.personalGoals || profile.values.personalGoals.length === 0) && (
+                        <span className="text-gray-500 text-sm">No personal goals selected</span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Communication Preferences */}
@@ -266,13 +398,53 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Communication Preferences
                   </label>
-                  <textarea
-                    rows={3}
-                    value={profile.values?.preferredCommunication?.join(', ') || ''}
-                    disabled={!isEditing}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    placeholder="How you prefer to communicate (e.g., Direct, Respectful, Engaging)"
-                  />
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      {[
+                        'Video Calls', 'Text Chat', 'Voice Calls', 'In-Person Meetings',
+                        'Email', 'Social Media', 'Group Chats', 'Workshops',
+                        'Conferences', 'Coffee Meetings'
+                      ].map((method) => (
+                        <label key={method} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={profile.values?.preferredCommunication?.includes(method) || false}
+                            onChange={(e) => {
+                              const currentMethods = profile.values?.preferredCommunication || [];
+                              const newMethods = e.target.checked
+                                ? [...currentMethods, method]
+                                : currentMethods.filter(m => m !== method);
+                              
+                              const updatedProfile = {
+                                ...profile,
+                                values: {
+                                  ...profile.values,
+                                  preferredCommunication: newMethods
+                                }
+                              };
+                              setProfile(updatedProfile);
+                            }}
+                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">{method}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.values?.preferredCommunication?.map((method) => (
+                        <span
+                          key={method}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {method}
+                        </span>
+                      ))}
+                      {(!profile.values?.preferredCommunication || profile.values.preferredCommunication.length === 0) && (
+                        <span className="text-gray-500 text-sm">No communication preferences selected</span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Availability */}
@@ -298,13 +470,55 @@ export default function SettingsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Preferred Times
                     </label>
-                    <textarea
-                      rows={2}
-                      value={profile.values?.availability?.preferredTimes?.join(', ') || ''}
-                      disabled={!isEditing}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500"
-                      placeholder="When you're most available (e.g., Evening, Weekend, Weekday)"
-                    />
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        {[
+                          'Early Morning (6-9 AM)', 'Morning (9 AM-12 PM)', 'Afternoon (12-5 PM)',
+                          'Evening (5-9 PM)', 'Late Evening (9 PM-12 AM)', 'Weekend', 'Weekday'
+                        ].map((time) => (
+                          <label key={time} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={profile.values?.availability?.preferredTimes?.includes(time) || false}
+                              onChange={(e) => {
+                                const currentTimes = profile.values?.availability?.preferredTimes || [];
+                                const newTimes = e.target.checked
+                                  ? [...currentTimes, time]
+                                  : currentTimes.filter(t => t !== time);
+                                
+                                const updatedProfile = {
+                                  ...profile,
+                                  values: {
+                                    ...profile.values,
+                                    availability: {
+                                      ...profile.values?.availability,
+                                      preferredTimes: newTimes
+                                    }
+                                  }
+                                };
+                                setProfile(updatedProfile);
+                              }}
+                              className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">{time}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {profile.values?.availability?.preferredTimes?.map((time) => (
+                          <span
+                            key={time}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                          >
+                            {time}
+                          </span>
+                        ))}
+                        {(!profile.values?.availability?.preferredTimes || profile.values.availability.preferredTimes.length === 0) && (
+                          <span className="text-gray-500 text-sm">No preferred times selected</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -317,10 +531,35 @@ export default function SettingsPage() {
                       Cancel
                     </button>
                     <button
-                      className="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                      onClick={async () => {
+                        if (!user || !profile) return;
+                        
+                        try {
+                          setLoadingProfile(true);
+                          await saveUserProfile(user.uid, profile);
+                          setIsEditing(false);
+                          // Show success message or toast here if you want
+                        } catch (error) {
+                          console.error('Error saving profile:', error);
+                          // Show error message here if you want
+                        } finally {
+                          setLoadingProfile(false);
+                        }
+                      }}
+                      disabled={loadingProfile}
+                      className="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <FiSave className="h-4 w-4 mr-2" />
-                      Save Changes
+                      {loadingProfile ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiSave className="h-4 w-4 mr-2" />
+                          Save Changes
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
