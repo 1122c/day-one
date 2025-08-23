@@ -141,7 +141,7 @@ export default function ProfileDiscovery({
     if (filters.searchTerm) {
       filtered = filtered.filter(profile =>
         profile.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        profile.bio.toLowerCase().includes(filters.searchTerm.toLowerCase())
+        (profile.bio && profile.bio.toLowerCase().includes(filters.searchTerm.toLowerCase()))
       );
     }
 
@@ -175,8 +175,13 @@ export default function ProfileDiscovery({
   };
 
   const getCompatibilityScore = (profile: UserProfile) => {
-    const compatibility = calculateCompatibilityScore(currentUser, profile);
-    return compatibility.overallScore;
+    try {
+      const compatibility = calculateCompatibilityScore(currentUser, profile);
+      return compatibility.overallScore;
+    } catch (error) {
+      console.error('Error calculating compatibility score:', error);
+      return 0; // Return 0 if calculation fails
+    }
   };
 
   const getCompatibilityColor = (score: number) => {
@@ -365,7 +370,7 @@ export default function ProfileDiscovery({
 
                   {/* Bio */}
                   <p className="text-sm text-gray-700 line-clamp-3 mb-4">
-                    {profile.bio}
+                    {profile.bio || 'No bio provided'}
                   </p>
 
                   {/* Values & Goals */}

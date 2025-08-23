@@ -29,18 +29,33 @@ export default function AISuggestions({
 }: AISuggestionsProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'conversation' | 'profile' | 'connections'>('conversation');
+  const [activeTab, setActiveTab] = useState<'ice-breakers' | 'discussion-starters' | 'profile' | 'connections'>('ice-breakers');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generationCount, setGenerationCount] = useState(0);
   const [showOnlyNew, setShowOnlyNew] = useState(false);
 
   useEffect(() => {
-    if (match && matchedUser) {
+    // Generate suggestions if we have a match and matched user, or if we just have a current user for general suggestions
+    if ((match && matchedUser) || (currentUser && !match && !matchedUser)) {
       generateSuggestions();
     }
-  }, [match, matchedUser, conversationHistory]);
+  }, [match, matchedUser, conversationHistory, currentUser]);
 
   const generateSuggestions = async (isNewGeneration: boolean = false) => {
+    // If we have a match and matched user, generate match-specific suggestions
+    if (match && matchedUser) {
+      await generateMatchSpecificSuggestions(isNewGeneration);
+    } 
+    // If we just have a current user, generate general suggestions
+    else if (currentUser) {
+      await generateGeneralSuggestions(isNewGeneration);
+    }
+    else {
+      return;
+    }
+  };
+
+  const generateMatchSpecificSuggestions = async (isNewGeneration: boolean = false) => {
     if (!match || !matchedUser) return;
 
     setLoading(true);
@@ -140,6 +155,147 @@ export default function AISuggestions({
     }
   };
 
+  const generateGeneralSuggestions = async (isNewGeneration: boolean = false) => {
+    if (!currentUser) return;
+
+    setLoading(true);
+    try {
+      // Generate ice breakers and discussion starters with descriptions
+      const newSuggestions: Suggestion[] = [
+        // Ice Breakers (5)
+        {
+          id: `icebreaker-1-${Date.now()}-${Math.random()}`,
+          type: 'conversation_starter',
+          content: 'Hi! I noticed we have some shared interests. I\'d love to learn more about your experiences and what drives you.',
+          category: 'Ice Breaker - Shared Interests',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `icebreaker-2-${Date.now()}-${Math.random()}`,
+          type: 'conversation_starter',
+          content: 'Hello! Your profile caught my attention. I\'m curious about your journey and would enjoy connecting with someone who shares similar values.',
+          category: 'Ice Breaker - Values Connection',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `icebreaker-3-${Date.now()}-${Math.random()}`,
+          type: 'conversation_starter',
+          content: 'Hey there! I appreciate how authentic your profile is. Would you be interested in sharing more about your goals and what you\'re passionate about?',
+          category: 'Ice Breaker - Authenticity',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `icebreaker-4-${Date.now()}-${Math.random()}`,
+          type: 'conversation_starter',
+          content: 'Hi! I love how your profile reflects your personality. What\'s the story behind one of your interests or hobbies?',
+          category: 'Ice Breaker - Personal Story',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `icebreaker-5-${Date.now()}-${Math.random()}`,
+          type: 'conversation_starter',
+          content: 'Hello! Your energy really comes through in your profile. What\'s something that always puts you in a good mood?',
+          category: 'Ice Breaker - Positive Energy',
+          used: false,
+          timestamp: new Date(),
+        },
+        // Discussion Starters (5)
+        {
+          id: `discussion-1-${Date.now()}-${Math.random()}`,
+          type: 'follow_up' as const,
+          content: 'What\'s something you\'re currently working on that excites you? I\'d love to hear about your latest project or goal.',
+          category: 'Discussion Starter - Current Projects',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `discussion-2-${Date.now()}-${Math.random()}`,
+          type: 'follow_up' as const,
+          content: 'How do you like to spend your free time when you\'re not working? Any hobbies or activities that help you recharge?',
+          category: 'Discussion Starter - Hobbies & Interests',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `discussion-3-${Date.now()}-${Math.random()}`,
+          type: 'follow_up' as const,
+          content: 'What\'s a challenge you\'ve overcome recently that you\'re proud of? I find it inspiring to hear about people\'s growth experiences.',
+          category: 'Discussion Starter - Personal Growth',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `discussion-4-${Date.now()}-${Math.random()}`,
+          type: 'follow_up' as const,
+          content: 'If you could have dinner with anyone (living or historical), who would it be and what would you talk about?',
+          category: 'Discussion Starter - Dream Conversations',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `discussion-5-${Date.now()}-${Math.random()}`,
+          type: 'follow_up' as const,
+          content: 'What\'s a book, movie, or podcast that has influenced your perspective on life recently?',
+          category: 'Discussion Starter - Media Influence',
+          used: false,
+          timestamp: new Date(),
+        },
+        // Connection ideas
+        {
+          id: `connection-1-${Date.now()}-${Math.random()}`,
+          type: 'connection_idea',
+          content: 'Consider suggesting a virtual coffee chat to discuss shared interests and goals. It\'s a great way to build deeper connections.',
+          category: 'Connection Idea - Virtual Meetup',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `connection-2-${Date.now()}-${Math.random()}`,
+          type: 'connection_idea',
+          content: 'Share a personal story related to your values to create a deeper connection. Vulnerability often leads to meaningful conversations.',
+          category: 'Connection Idea - Personal Stories',
+          used: false,
+          timestamp: new Date(),
+        },
+        // Profile tips
+        {
+          id: `profile-1-${Date.now()}-${Math.random()}`,
+          type: 'profile_tip',
+          content: 'Your profile shows great potential! Consider adding specific examples of how you live your values in daily life.',
+          category: 'Profile Enhancement - Value Examples',
+          used: false,
+          timestamp: new Date(),
+        },
+        {
+          id: `profile-2-${Date.now()}-${Math.random()}`,
+          type: 'profile_tip',
+          content: 'Adding more details about your interests and experiences will help others connect with you better and find common ground.',
+          category: 'Profile Enhancement - Rich Details',
+          used: false,
+          timestamp: new Date(),
+        },
+      ];
+
+      if (isNewGeneration) {
+        // Add new suggestions to existing ones
+        setSuggestions(prev => [...prev, ...newSuggestions]);
+        setGenerationCount(prev => prev + 1);
+      } else {
+        // Replace all suggestions (initial load)
+        setSuggestions(newSuggestions);
+        setGenerationCount(1);
+      }
+    } catch (error) {
+      console.error('Error generating general suggestions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const clearOldSuggestions = () => {
     setSuggestions([]);
     setGenerationCount(0);
@@ -175,10 +331,10 @@ export default function AISuggestions({
     }
     
     switch (activeTab) {
-      case 'conversation':
-        return filtered.filter(s => 
-          s.type === 'conversation_starter' || s.type === 'follow_up'
-        );
+      case 'ice-breakers':
+        return filtered.filter(s => s.type === 'conversation_starter');
+      case 'discussion-starters':
+        return filtered.filter(s => s.type === 'follow_up');
       case 'profile':
         return filtered.filter(s => s.type === 'profile_tip');
       case 'connections':
@@ -190,7 +346,9 @@ export default function AISuggestions({
 
   const getTabIcon = (tab: string) => {
     switch (tab) {
-      case 'conversation':
+      case 'ice-breakers':
+        return FiMessageSquare;
+      case 'discussion-starters':
         return FiMessageSquare;
       case 'profile':
         return FiTarget;
@@ -303,7 +461,8 @@ export default function AISuggestions({
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8 px-6">
           {[
-            { id: 'conversation', label: 'Conversation', count: suggestions.filter(s => s.type === 'conversation_starter' || s.type === 'follow_up').length },
+            { id: 'ice-breakers', label: 'Ice Breakers', count: suggestions.filter(s => s.type === 'conversation_starter').length },
+            { id: 'discussion-starters', label: 'Discussion Starters', count: suggestions.filter(s => s.type === 'follow_up').length },
             { id: 'profile', label: 'Profile Tips', count: suggestions.filter(s => s.type === 'profile_tip').length },
             { id: 'connections', label: 'Connection Ideas', count: suggestions.filter(s => s.type === 'connection_idea').length },
           ].map((tab) => {
@@ -411,7 +570,7 @@ export default function AISuggestions({
             <FiZap className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-4 text-lg font-medium text-gray-900">No suggestions available</h3>
             <p className="mt-2 text-gray-600">
-              {activeTab === 'conversation' 
+              {activeTab === 'ice-breakers' || activeTab === 'discussion-starters'
                 ? 'Start a conversation to get personalized suggestions.'
                 : 'Complete your profile to receive tailored recommendations.'
               }
