@@ -162,10 +162,12 @@ export default function DiscoverPage() {
   };
 
   const handleStartConversation = (profile: UserProfile) => {
+    if (!userProfile) return;
+    
     // Create a mock match for the chat
     const mockMatch: Match = {
-      id: `match-${userProfile?.id}-${profile.id}`,
-      userIds: [userProfile?.id || '', profile.id],
+      id: `match-${userProfile.id}-${profile.id}`,
+      userIds: [userProfile.id, profile.id],
       matchScore: 85, // Mock score
       compatibilityFactors: {
         valuesAlignment: 80,
@@ -177,7 +179,7 @@ export default function DiscoverPage() {
       status: 'pending',
     };
     
-    openChat(profile, mockMatch);
+    openChat(userProfile, profile, mockMatch);
   };
 
   const handleLikeProfile = async (profile: UserProfile) => {

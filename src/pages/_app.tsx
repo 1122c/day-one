@@ -5,7 +5,7 @@ import FloatingChat from "@/components/chat/FloatingChat";
 import { useChat } from "@/contexts/ChatContext";
 
 function AppContent({ Component, pageProps }: { Component: any; pageProps: any }) {
-  const { isChatOpen, isMinimized, currentChatUser, currentMatch, closeChat, minimizeChat } = useChat();
+  const { isChatOpen, isMinimized, currentUser, matchedUser, currentMatch, closeChat, minimizeChat } = useChat();
 
   return (
     <>
@@ -14,8 +14,8 @@ function AppContent({ Component, pageProps }: { Component: any; pageProps: any }
         isOpen={isChatOpen && !isMinimized}
         onClose={closeChat}
         onMinimize={minimizeChat}
-        currentUser={currentChatUser}
-        matchedUser={currentChatUser}
+        currentUser={currentUser}
+        matchedUser={matchedUser}
         match={currentMatch || undefined}
       />
     </>

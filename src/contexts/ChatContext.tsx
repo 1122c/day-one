@@ -4,9 +4,10 @@ import { UserProfile, Match } from '@/types/user';
 interface ChatContextType {
   isChatOpen: boolean;
   isMinimized: boolean;
-  currentChatUser: UserProfile | null;
+  currentUser: UserProfile | null; // The logged-in user
+  matchedUser: UserProfile | null; // The user they're chatting with
   currentMatch: Match | null;
-  openChat: (user: UserProfile, match?: Match) => void;
+  openChat: (currentUser: UserProfile, matchedUser: UserProfile, match?: Match) => void;
   closeChat: () => void;
   minimizeChat: () => void;
   maximizeChat: () => void;
@@ -17,11 +18,13 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [currentChatUser, setCurrentChatUser] = useState<UserProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null); // The logged-in user
+  const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null); // The user they're chatting with
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
 
-  const openChat = (user: UserProfile, match?: Match) => {
-    setCurrentChatUser(user);
+  const openChat = (currentUser: UserProfile, matchedUser: UserProfile, match?: Match) => {
+    setCurrentUser(currentUser);
+    setMatchedUser(matchedUser);
     setCurrentMatch(match || null);
     setIsChatOpen(true);
     setIsMinimized(false);
@@ -30,7 +33,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const closeChat = () => {
     setIsChatOpen(false);
     setIsMinimized(false);
-    setCurrentChatUser(null);
+    setCurrentUser(null);
+    setMatchedUser(null);
     setCurrentMatch(null);
   };
 
@@ -45,7 +49,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const value: ChatContextType = {
     isChatOpen,
     isMinimized,
-    currentChatUser,
+    currentUser,
+    matchedUser,
     currentMatch,
     openChat,
     closeChat,

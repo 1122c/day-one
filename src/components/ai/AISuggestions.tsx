@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UserProfile, Match } from '@/types/user';
 import { generateMatchSuggestions, generateInitialMessage, generateFollowUpQuestions } from '@/services/matchingService';
+import { generateIceBreakers, generateConversationStarters, generateGrowthSuggestions } from '@/services/conversationService';
 import { FiZap, FiMessageSquare, FiTarget, FiRefreshCw, FiCopy, FiCheck, FiPlus, FiX } from 'react-icons/fi';
 
 interface AISuggestionsProps {
@@ -71,7 +72,7 @@ export default function AISuggestions({
       const newSuggestions: Suggestion[] = [
         // Conversation starters
         {
-          id: `initial-${Date.now()}-${Math.random()}`,
+          id: `initial-${Date.now().toString()}-${Math.random().toString()}`,
           type: 'conversation_starter',
           content: initialMessage,
           category: 'First Message',
@@ -79,7 +80,7 @@ export default function AISuggestions({
           timestamp: new Date(),
         },
         ...followUpQuestions.map((question, index) => ({
-          id: `followup-${Date.now()}-${index}-${Math.random()}`,
+          id: `followup-${Date.now().toString()}-${index}-${Math.random().toString()}`,
           type: 'follow_up' as const,
           content: question,
           category: 'Follow-up Question',
@@ -88,7 +89,7 @@ export default function AISuggestions({
         })),
         // Match suggestions
         ...matchSuggestions.map((suggestion, index) => ({
-          id: `suggestion-${Date.now()}-${index}-${Math.random()}`,
+          id: `suggestion-${Date.now().toString()}-${index}-${Math.random().toString()}`,
           type: 'connection_idea' as const,
           content: suggestion,
           category: 'Connection Idea',
@@ -97,7 +98,7 @@ export default function AISuggestions({
         })),
         // Profile tips
         {
-          id: `profile-1-${Date.now()}-${Math.random()}`,
+          id: `profile-1-${Date.now().toString()}-${Math.random().toString()}`,
           type: 'profile_tip',
           content: 'Consider adding more specific examples of your work or interests to make your profile more engaging.',
           category: 'Profile Enhancement',
@@ -105,7 +106,7 @@ export default function AISuggestions({
           timestamp: new Date(),
         },
         {
-          id: `profile-2-${Date.now()}-${Math.random()}`,
+          id: `profile-2-${Date.now().toString()}-${Math.random().toString()}`,
           type: 'profile_tip',
           content: 'Your core values are well-defined. Try adding how you live these values in your daily life.',
           category: 'Profile Enhancement',
@@ -138,7 +139,7 @@ export default function AISuggestions({
       const followUpQuestions = await generateFollowUpQuestions(currentUser, matchedUser, conversationHistory);
       
       const newFollowUpSuggestions: Suggestion[] = followUpQuestions.map((question, index) => ({
-        id: `followup-new-${Date.now()}-${index}-${Math.random()}`,
+        id: `followup-new-${Date.now().toString()}-${index}-${Math.random().toString()}`,
         type: 'follow_up' as const,
         content: question,
         category: 'Follow-up Question',
@@ -160,121 +161,81 @@ export default function AISuggestions({
 
     setLoading(true);
     try {
-      // Generate ice breakers and discussion starters with descriptions
+      // For general suggestions, we need to create a mock profile to generate AI suggestions
+      // This simulates having a matched user for the AI to work with
+      const mockProfile: UserProfile = {
+        id: 'mock-profile',
+        name: 'Potential Match',
+        email: 'mock@example.com',
+        bio: 'A potential connection with shared interests and values',
+        age: 25,
+        location: 'Your area',
+        occupation: 'Professional',
+        education: 'Bachelor\'s degree',
+        interests: ['Networking', 'Personal Growth', 'Professional Development'],
+        socialProfiles: [],
+        values: {
+          coreValues: ['Growth', 'Connection', 'Authenticity'],
+          personalGoals: ['Build meaningful relationships', 'Learn from others', 'Share experiences'],
+          preferredCommunication: ['Direct', 'Respectful', 'Engaging'],
+          availability: {
+            timezone: 'UTC',
+            preferredTimes: ['Evening', 'Weekend'],
+          },
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Generate AI-powered suggestions using the conversation service
+      const [iceBreakers, conversationStarters, growthSuggestions] = await Promise.all([
+        generateIceBreakers(currentUser, mockProfile),
+        generateConversationStarters(currentUser, mockProfile),
+        generateGrowthSuggestions(currentUser, mockProfile),
+      ]);
+
       const newSuggestions: Suggestion[] = [
-        // Ice Breakers (5)
-        {
-          id: `icebreaker-1-${Date.now()}-${Math.random()}`,
-          type: 'conversation_starter',
-          content: 'Hi! I noticed we have some shared interests. I\'d love to learn more about your experiences and what drives you.',
-          category: 'Ice Breaker - Shared Interests',
+        // Ice Breakers from AI
+        ...iceBreakers.map((content, index) => ({
+          id: `icebreaker-${Date.now().toString()}-${index}-${Math.random().toString()}`,
+          type: 'conversation_starter' as const,
+          content,
+          category: 'Ice Breaker - AI Generated',
           used: false,
           timestamp: new Date(),
-        },
-        {
-          id: `icebreaker-2-${Date.now()}-${Math.random()}`,
-          type: 'conversation_starter',
-          content: 'Hello! Your profile caught my attention. I\'m curious about your journey and would enjoy connecting with someone who shares similar values.',
-          category: 'Ice Breaker - Values Connection',
-          used: false,
-          timestamp: new Date(),
-        },
-        {
-          id: `icebreaker-3-${Date.now()}-${Math.random()}`,
-          type: 'conversation_starter',
-          content: 'Hey there! I appreciate how authentic your profile is. Would you be interested in sharing more about your goals and what you\'re passionate about?',
-          category: 'Ice Breaker - Authenticity',
-          used: false,
-          timestamp: new Date(),
-        },
-        {
-          id: `icebreaker-4-${Date.now()}-${Math.random()}`,
-          type: 'conversation_starter',
-          content: 'Hi! I love how your profile reflects your personality. What\'s the story behind one of your interests or hobbies?',
-          category: 'Ice Breaker - Personal Story',
-          used: false,
-          timestamp: new Date(),
-        },
-        {
-          id: `icebreaker-5-${Date.now()}-${Math.random()}`,
-          type: 'conversation_starter',
-          content: 'Hello! Your energy really comes through in your profile. What\'s something that always puts you in a good mood?',
-          category: 'Ice Breaker - Positive Energy',
-          used: false,
-          timestamp: new Date(),
-        },
-        // Discussion Starters (5)
-        {
-          id: `discussion-1-${Date.now()}-${Math.random()}`,
+        })),
+        // Discussion Starters from AI
+        ...conversationStarters.map((content, index) => ({
+          id: `discussion-${Date.now().toString()}-${index}-${Math.random().toString()}`,
           type: 'follow_up' as const,
-          content: 'What\'s something you\'re currently working on that excites you? I\'d love to hear about your latest project or goal.',
-          category: 'Discussion Starter - Current Projects',
+          content,
+          category: 'Discussion Starter - AI Generated',
           used: false,
           timestamp: new Date(),
-        },
-        {
-          id: `discussion-2-${Date.now()}-${Math.random()}`,
-          type: 'follow_up' as const,
-          content: 'How do you like to spend your free time when you\'re not working? Any hobbies or activities that help you recharge?',
-          category: 'Discussion Starter - Hobbies & Interests',
+        })),
+        // Growth suggestions from AI
+        ...growthSuggestions.map((content, index) => ({
+          id: `growth-${Date.now().toString()}-${index}-${Math.random().toString()}`,
+          type: 'connection_idea' as const,
+          content,
+          category: 'Growth Opportunity - AI Generated',
           used: false,
           timestamp: new Date(),
-        },
+        })),
+        // Profile enhancement tips
         {
-          id: `discussion-3-${Date.now()}-${Math.random()}`,
-          type: 'follow_up' as const,
-          content: 'What\'s a challenge you\'ve overcome recently that you\'re proud of? I find it inspiring to hear about people\'s growth experiences.',
-          category: 'Discussion Starter - Personal Growth',
-          used: false,
-          timestamp: new Date(),
-        },
-        {
-          id: `discussion-4-${Date.now()}-${Math.random()}`,
-          type: 'follow_up' as const,
-          content: 'If you could have dinner with anyone (living or historical), who would it be and what would you talk about?',
-          category: 'Discussion Starter - Dream Conversations',
-          used: false,
-          timestamp: new Date(),
-        },
-        {
-          id: `discussion-5-${Date.now()}-${Math.random()}`,
-          type: 'follow_up' as const,
-          content: 'What\'s a book, movie, or podcast that has influenced your perspective on life recently?',
-          category: 'Discussion Starter - Media Influence',
-          used: false,
-          timestamp: new Date(),
-        },
-        // Connection ideas
-        {
-          id: `connection-1-${Date.now()}-${Math.random()}`,
-          type: 'connection_idea',
-          content: 'Consider suggesting a virtual coffee chat to discuss shared interests and goals. It\'s a great way to build deeper connections.',
-          category: 'Connection Idea - Virtual Meetup',
-          used: false,
-          timestamp: new Date(),
-        },
-        {
-          id: `connection-2-${Date.now()}-${Math.random()}`,
-          type: 'connection_idea',
-          content: 'Share a personal story related to your values to create a deeper connection. Vulnerability often leads to meaningful conversations.',
-          category: 'Connection Idea - Personal Stories',
-          used: false,
-          timestamp: new Date(),
-        },
-        // Profile tips
-        {
-          id: `profile-1-${Date.now()}-${Math.random()}`,
+          id: `profile-1-${Date.now().toString()}-${Math.random().toString()}`,
           type: 'profile_tip',
-          content: 'Your profile shows great potential! Consider adding specific examples of how you live your values in daily life.',
-          category: 'Profile Enhancement - Value Examples',
+          content: 'Consider adding more specific examples of your work or interests to make your profile more engaging.',
+          category: 'Profile Enhancement',
           used: false,
           timestamp: new Date(),
         },
         {
-          id: `profile-2-${Date.now()}-${Math.random()}`,
+          id: `profile-2-${Date.now().toString()}-${Math.random().toString()}`,
           type: 'profile_tip',
-          content: 'Adding more details about your interests and experiences will help others connect with you better and find common ground.',
-          category: 'Profile Enhancement - Rich Details',
+          content: 'Your core values are well-defined. Try adding how you live these values in your daily life.',
+          category: 'Profile Enhancement',
           used: false,
           timestamp: new Date(),
         },
