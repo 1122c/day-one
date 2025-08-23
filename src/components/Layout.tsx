@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/router';
-import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings } from 'react-icons/fi';
+import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings, FiMessageSquare } from 'react-icons/fi';
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,6 +16,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: 'Home', href: '/', icon: FiHome },
     { name: 'Discover', href: '/discover', icon: FiSearch },
+    { name: 'Messages', href: '/messages', icon: FiMessageSquare },
     { name: 'Matches', href: '/matches', icon: FiHeart },
     { name: 'Connections', href: '/connections', icon: FiUsers },
   ];
