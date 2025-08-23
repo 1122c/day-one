@@ -136,7 +136,7 @@ export default function ProfileReview({ profile, onEdit, onSubmit, isSubmitting,
                 <div className="mt-2">
                   <p className="text-gray-900">Timezone: {profile.values?.availability.timezone}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {profile.values?.availability.preferredTimes.map((time) => (
+                    {profile.values?.availability.preferredTimes?.map((time) => (
                       <span
                         key={time}
                         className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800"

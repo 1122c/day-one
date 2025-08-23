@@ -42,7 +42,7 @@ export default function MessagesPage() {
           email: user.email || '',
           name: user.displayName || 'User',
           bio: '',
-          age: 0,
+          age: '0',
           location: '',
           occupation: '',
           education: '',
@@ -59,10 +59,13 @@ export default function MessagesPage() {
           },
           privacy: {
             profileVisibility: 'public',
-            showAge: true,
-            showLocation: true,
-            allowMessages: true,
+            showEmail: false,
+            showSocialProfiles: true,
+            allowMessaging: true,
             showOnlineStatus: true,
+            showReadReceipts: true,
+            showTypingIndicators: true,
+            allowProfileViews: true,
           },
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -91,7 +94,7 @@ export default function MessagesPage() {
           },
           matchReason: 'Strong alignment on core values and communication preferences',
           createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-          status: 'active',
+          status: 'accepted',
         },
         {
           id: 'conv-2',
@@ -104,7 +107,7 @@ export default function MessagesPage() {
           },
           matchReason: 'Great synergy in personal goals and shared interests',
           createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-          status: 'active',
+          status: 'accepted',
         },
         {
           id: 'conv-3',
@@ -131,7 +134,7 @@ export default function MessagesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'accepted':
         return 'text-green-600 bg-green-100';
       case 'pending':
         return 'text-yellow-600 bg-yellow-100';
@@ -142,8 +145,8 @@ export default function MessagesPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'Active';
+      case 'accepted':
+        return 'Accepted';
       case 'pending':
         return 'Pending';
       default:
@@ -212,7 +215,7 @@ export default function MessagesPage() {
               <FiMessageSquare className="h-8 w-8 mr-3" />
               <div>
                 <p className="text-blue-100 text-sm">Active Conversations</p>
-                <p className="text-2xl font-bold">{conversations.filter(c => c.status === 'active').length}</p>
+                <p className="text-2xl font-bold">{conversations.filter(c => c.status === 'accepted').length}</p>
               </div>
             </div>
           </div>

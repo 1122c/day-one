@@ -17,7 +17,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Home', href: '/', icon: FiHome },
     { name: 'Discover', href: '/discover', icon: FiSearch },
     { name: 'Messages', href: '/messages', icon: FiMessageSquare },
-    { name: 'Matches', href: '/matches', icon: FiHeart },
+    { name: 'Suggested Users', href: '/matches', icon: FiHeart },
     { name: 'Connections', href: '/connections', icon: FiUsers },
   ];
 
@@ -50,6 +50,23 @@ export default function Layout({ children }: LayoutProps) {
                     </Link>
                   );
                 })}
+              </div>
+              
+              {/* Mobile menu button */}
+              <div className="md:hidden">
+                <button
+                  type="button"
+                  className="p-2 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  onClick={() => {
+                    // TODO: Implement mobile menu toggle
+                    console.log('Mobile menu toggle');
+                  }}
+                >
+                  <span className="sr-only">Open main menu</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
               </div>
             </div>
             {/* User & Actions */}

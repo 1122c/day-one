@@ -37,7 +37,7 @@ export function calculateCompatibilityScore(
   );
   
   // Interests overlap (5% weight) - based on bio analysis
-  const interestsOverlap = calculateInterestsOverlap(user1.bio, user2.bio);
+  const interestsOverlap = calculateInterestsOverlap(user1.bio || '', user2.bio || '');
   
   // Calculate weighted overall score
   const overallScore = Math.round(
