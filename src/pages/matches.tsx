@@ -138,6 +138,38 @@ export default function MatchesPage() {
     // TODO: Implement conversation start logic
   };
 
+  const handleUnfollowProfile = async (profile: UserProfile) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to unfollow ${profile.name}? You won't see their updates anymore.`
+    );
+    
+    if (!isConfirmed) return;
+    
+    try {
+      console.log('Unfollowed profile:', profile.name);
+      alert(`You unfollowed ${profile.name}. You won't see their updates anymore.`);
+    } catch (error) {
+      console.error('Error unfollowing profile:', error);
+      alert('Failed to unfollow profile. Please try again.');
+    }
+  };
+
+  const handleReportProfile = async (profile: UserProfile) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to report ${profile.name}'s profile? This action will be reviewed by our team.`
+    );
+    
+    if (!isConfirmed) return;
+    
+    try {
+      console.log('Reported profile:', profile.name);
+      alert(`Thank you for reporting ${profile.name}'s profile. Our team will review it within 24 hours.`);
+    } catch (error) {
+      console.error('Error reporting profile:', error);
+      alert('Failed to report profile. Please try again.');
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -152,6 +184,8 @@ export default function MatchesPage() {
           onAcceptMatch={handleAcceptMatch}
           onRejectMatch={handleRejectMatch}
           onStartConversation={handleStartConversation}
+          onUnfollowProfile={handleUnfollowProfile}
+          onReportProfile={handleReportProfile}
         />
       </div>
     </Layout>

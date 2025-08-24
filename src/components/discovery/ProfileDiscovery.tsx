@@ -463,16 +463,16 @@ export default function ProfileDiscovery({
                   <div className="flex space-x-2">
                     <button
                       onClick={() => onUnfollowProfile(profile)}
-                      className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors duration-200 border border-red-200"
+                      className="flex-1 bg-red-50 text-red-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-red-100 transition-colors duration-200 border border-red-200"
                     >
-                      <FiUserMinus className="inline h-4 w-4 mr-1" />
+                      <FiUserMinus className="inline h-3 w-3 mr-1" />
                       Unfollow
                     </button>
                     <button
                       onClick={() => onReportProfile(profile)}
-                      className="flex-1 bg-yellow-50 text-yellow-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-100 transition-colors duration-200 border border-yellow-200"
+                      className="flex-1 bg-yellow-50 text-yellow-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-yellow-100 transition-colors duration-200 border border-yellow-200"
                     >
-                      <FiFlag className="inline h-4 w-4 mr-1" />
+                      <FiFlag className="inline h-3 w-3 mr-1" />
                       Report
                     </button>
                   </div>

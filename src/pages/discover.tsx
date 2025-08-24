@@ -202,6 +202,12 @@ export default function DiscoverPage() {
   };
 
   const handleUnfollowProfile = async (profile: UserProfile) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to unfollow ${profile.name}? You won't see their updates anymore.`
+    );
+    
+    if (!isConfirmed) return;
+    
     try {
       // In a real app, this would remove the follow relationship from the database
       console.log('Unfollowed profile:', profile.name);
@@ -218,6 +224,12 @@ export default function DiscoverPage() {
   };
 
   const handleReportProfile = async (profile: UserProfile) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to report ${profile.name}'s profile? This action will be reviewed by our team.`
+    );
+    
+    if (!isConfirmed) return;
+    
     try {
       // In a real app, this would submit a report to moderators
       console.log('Reported profile:', profile.name);
@@ -486,23 +498,23 @@ export default function DiscoverPage() {
                     </button>
                   </div>
                   
-                  {/* Secondary Action Buttons */}
-                  <div className="flex space-x-3 pt-3">
-                    <button
-                      onClick={() => handleUnfollowProfile(selectedProfile)}
-                      className="flex-1 bg-red-50 text-red-600 px-4 py-2 rounded-md hover:bg-red-100 transition-colors duration-200 border border-red-200"
-                    >
-                      <FiUserMinus className="inline h-4 w-4 mr-2" />
-                      Unfollow
-                    </button>
-                    <button
-                      onClick={() => handleReportProfile(selectedProfile)}
-                      className="flex-1 bg-yellow-50 text-yellow-600 px-4 py-2 rounded-md hover:bg-yellow-100 transition-colors duration-200 border border-yellow-200"
-                    >
-                      <FiFlag className="inline h-4 w-4 mr-2" />
-                      Report Profile
-                    </button>
-                  </div>
+                            {/* Secondary Action Buttons */}
+          <div className="flex space-x-2 pt-3">
+            <button
+              onClick={() => handleUnfollowProfile(selectedProfile)}
+              className="flex-1 bg-red-50 text-red-600 px-3 py-1.5 rounded-md hover:bg-red-100 transition-colors duration-200 border border-red-200 text-sm"
+            >
+              <FiUserMinus className="inline h-3 w-3 mr-1.5" />
+              Unfollow
+            </button>
+            <button
+              onClick={() => handleReportProfile(selectedProfile)}
+              className="flex-1 bg-yellow-50 text-yellow-600 px-3 py-1.5 rounded-md hover:bg-yellow-100 transition-colors duration-200 border border-yellow-200 text-sm"
+            >
+              <FiFlag className="inline h-3 w-3 mr-1.5" />
+              Report Profile
+            </button>
+          </div>
                 </div>
               </div>
             </div>
