@@ -166,8 +166,7 @@ export default function Home() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"> Purpose</span>
             </h1>
             <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Build meaningful connections based on shared values, goals, and authentic interests. 
-              ConnectMind uses AI-powered matching to help you find people who truly align with your vision.
+              Connect through what really matters—shared values, goals, and genuine interests. ConnectMind matches you with people aligned to your vision and provides smart conversation support to make it easy to build lasting connections.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -243,29 +242,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Stats Section */}
-      <div className="py-24 bg-gradient-to-r from-indigo-600 to-purple-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">10K+</div>
-              <div className="text-indigo-100">Active Users</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">5K+</div>
-              <div className="text-indigo-100">Successful Matches</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">95%</div>
-              <div className="text-indigo-100">Satisfaction Rate</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">24/7</div>
-              <div className="text-indigo-100">AI Support</div>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* CTA Section */}
       <div className="py-24 bg-white">

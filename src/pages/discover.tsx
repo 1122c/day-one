@@ -7,7 +7,7 @@ import Layout from '@/components/Layout';
 import ProfileDiscovery from '@/components/discovery/ProfileDiscovery';
 import MatchDashboard from '@/components/matches/MatchDashboard';
 import { UserProfile, Match } from '@/types/user';
-import { FiUsers, FiSearch, FiHeart, FiMessageSquare, FiZap } from 'react-icons/fi';
+import { FiUsers, FiSearch, FiHeart, FiMessageSquare, FiZap, FiUserMinus, FiFlag } from 'react-icons/fi';
 import { useChat } from '@/contexts/ChatContext';
 
 export default function DiscoverPage() {
@@ -201,6 +201,38 @@ export default function DiscoverPage() {
     }
   };
 
+  const handleUnfollowProfile = async (profile: UserProfile) => {
+    try {
+      // In a real app, this would remove the follow relationship from the database
+      console.log('Unfollowed profile:', profile.name);
+      
+      // You could implement an unfollow system here:
+      // await removeFollow(userProfile.id, profile.id);
+      
+      // Show success feedback
+      alert(`You unfollowed ${profile.name}. You won't see their updates anymore.`);
+    } catch (error) {
+      console.error('Error unfollowing profile:', error);
+      alert('Failed to unfollow profile. Please try again.');
+    }
+  };
+
+  const handleReportProfile = async (profile: UserProfile) => {
+    try {
+      // In a real app, this would submit a report to moderators
+      console.log('Reported profile:', profile.name);
+      
+      // You could implement a reporting system here:
+      // await submitReport(userProfile.id, profile.id, reason);
+      
+      // Show success feedback
+      alert(`Thank you for reporting ${profile.name}'s profile. Our team will review it within 24 hours.`);
+    } catch (error) {
+      console.error('Error reporting profile:', error);
+      alert('Failed to report profile. Please try again.');
+    }
+  };
+
   const handleAcceptMatch = (matchId: string) => {
     // In a real app, this would accept the match
     console.log('Accepted match:', matchId);
@@ -301,6 +333,8 @@ export default function DiscoverPage() {
             onViewProfile={handleViewProfile}
             onStartConversation={handleStartConversation}
             onLikeProfile={handleLikeProfile}
+            onUnfollowProfile={handleUnfollowProfile}
+            onReportProfile={handleReportProfile}
           />
         )}
 
@@ -449,6 +483,24 @@ export default function DiscoverPage() {
                       className="px-4 py-2 text-pink-500 hover:text-pink-700 transition-colors duration-200 border border-pink-300 rounded-md"
                     >
                       <FiHeart className="h-4 w-4" />
+                    </button>
+                  </div>
+                  
+                  {/* Secondary Action Buttons */}
+                  <div className="flex space-x-3 pt-3">
+                    <button
+                      onClick={() => handleUnfollowProfile(selectedProfile)}
+                      className="flex-1 bg-red-50 text-red-600 px-4 py-2 rounded-md hover:bg-red-100 transition-colors duration-200 border border-red-200"
+                    >
+                      <FiUserMinus className="inline h-4 w-4 mr-2" />
+                      Unfollow
+                    </button>
+                    <button
+                      onClick={() => handleReportProfile(selectedProfile)}
+                      className="flex-1 bg-yellow-50 text-yellow-600 px-4 py-2 rounded-md hover:bg-yellow-100 transition-colors duration-200 border border-yellow-200"
+                    >
+                      <FiFlag className="inline h-4 w-4 mr-2" />
+                      Report Profile
                     </button>
                   </div>
                 </div>

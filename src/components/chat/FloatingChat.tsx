@@ -167,26 +167,26 @@ export default function FloatingChat({
 
       {/* AI Suggestions Toggle */}
       {currentUser && (
-        <div className="px-4 py-3 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="px-3 py-2 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <button
             onClick={() => setShowAISuggestions(!showAISuggestions)}
-            className={`w-full text-center font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 ${
+            className={`w-full text-center font-medium py-2 px-3 rounded-md transition-all duration-200 ${
               showAISuggestions 
-                ? 'bg-red-500 text-white hover:bg-red-600 shadow-lg' 
-                : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                ? 'bg-red-500 text-white hover:bg-red-600 shadow-md' 
+                : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg'
             }`}
           >
-            <div className="flex items-center justify-center space-x-2">
-              <span className="text-lg">✨</span>
-              <span className="text-base">
-                {showAISuggestions ? 'Hide AI Suggestions' : 'Get AI Ice Breakers & Discussion Starters!'}
+            <div className="flex items-center justify-center space-x-1">
+              <span className="text-sm">✨</span>
+              <span className="text-sm">
+                {showAISuggestions ? 'Hide AI' : 'Get AI Help'}
               </span>
-              <span className="text-lg">✨</span>
+              <span className="text-sm">✨</span>
             </div>
           </button>
           {!showAISuggestions && (
-            <p className="text-xs text-center text-gray-600 mt-2">
-              Click to get personalized conversation starters and ice breakers
+            <p className="text-xs text-center text-gray-600 mt-1">
+              Personalized conversation starters
             </p>
           )}
         </div>
@@ -194,10 +194,10 @@ export default function FloatingChat({
 
       {/* AI Suggestions Panel */}
       {showAISuggestions && currentUser && (
-        <div className="border-t-2 border-indigo-200 bg-gradient-to-b from-indigo-50 to-white max-h-64 overflow-y-auto">
-          <div className="p-3 bg-indigo-100 border-b border-indigo-200">
-            <h4 className="text-sm font-semibold text-indigo-800 text-center">
-              🤖 AI-Powered Conversation Helpers
+        <div className="border-t border-indigo-200 bg-white max-h-80 overflow-y-auto">
+          <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600">
+            <h4 className="text-xs font-semibold text-white text-center">
+              ✨ AI Conversation Helpers
             </h4>
           </div>
           <AISuggestions

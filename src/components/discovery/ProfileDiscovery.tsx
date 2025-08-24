@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { UserProfile } from '@/types/user';
 import { calculateCompatibilityScore } from '@/services/matchingService';
-import { FiUser, FiSearch, FiFilter, FiMapPin, FiTarget, FiHeart, FiMessageSquare, FiEye } from 'react-icons/fi';
+import { FiUser, FiSearch, FiFilter, FiMapPin, FiTarget, FiHeart, FiMessageSquare, FiEye, FiUserMinus, FiFlag } from 'react-icons/fi';
 
 interface ProfileDiscoveryProps {
   currentUser: UserProfile;
   onViewProfile: (profile: UserProfile) => void;
   onStartConversation: (profile: UserProfile) => void;
   onLikeProfile: (profile: UserProfile) => void;
+  onUnfollowProfile: (profile: UserProfile) => void;
+  onReportProfile: (profile: UserProfile) => void;
 }
 
 interface FilterOptions {
@@ -23,6 +25,8 @@ export default function ProfileDiscovery({
   onViewProfile,
   onStartConversation,
   onLikeProfile,
+  onUnfollowProfile,
+  onReportProfile,
 }: ProfileDiscoveryProps) {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<UserProfile[]>([]);
@@ -432,7 +436,7 @@ export default function ProfileDiscovery({
 
                 {/* Action Buttons */}
                 <div className="p-6">
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 mb-3">
                     <button
                       onClick={() => onViewProfile(profile)}
                       className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors duration-200"
@@ -452,6 +456,24 @@ export default function ProfileDiscovery({
                       className="px-4 py-2 text-pink-500 hover:text-pink-700 transition-colors duration-200"
                     >
                       <FiHeart className="h-4 w-4" />
+                    </button>
+                  </div>
+                  
+                  {/* Secondary Action Buttons */}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => onUnfollowProfile(profile)}
+                      className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-100 transition-colors duration-200 border border-red-200"
+                    >
+                      <FiUserMinus className="inline h-4 w-4 mr-1" />
+                      Unfollow
+                    </button>
+                    <button
+                      onClick={() => onReportProfile(profile)}
+                      className="flex-1 bg-yellow-50 text-yellow-600 px-3 py-2 rounded-md text-sm font-medium hover:bg-yellow-100 transition-colors duration-200 border border-yellow-200"
+                    >
+                      <FiFlag className="inline h-4 w-4 mr-1" />
+                      Report
                     </button>
                   </div>
                 </div>

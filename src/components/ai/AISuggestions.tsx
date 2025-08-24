@@ -419,10 +419,6 @@ export default function AISuggestions({
           return filtered.filter(s => s.type === 'conversation_starter');
         case 'discussion-starters':
           return filtered.filter(s => s.type === 'follow_up');
-        case 'profile':
-          return filtered.filter(s => s.type === 'profile_tip');
-        case 'connections':
-          return filtered.filter(s => s.type === 'connection_idea');
         default:
           return filtered;
       }
@@ -443,12 +439,8 @@ export default function AISuggestions({
         return FiMessageSquare;
       case 'discussion-starters':
         return FiMessageSquare;
-      case 'profile':
-        return FiTarget;
-      case 'connections':
-        return FiZap;
       default:
-        return FiZap;
+        return FiMessageSquare;
     }
   };
 
@@ -458,10 +450,6 @@ export default function AISuggestions({
         return 'bg-blue-50 border-blue-200 text-blue-800';
       case 'follow_up':
         return 'bg-green-50 border-green-200 text-green-800';
-      case 'profile_tip':
-        return 'bg-purple-50 border-purple-200 text-purple-800';
-      case 'connection_idea':
-        return 'bg-orange-50 border-orange-200 text-orange-800';
       default:
         return 'bg-gray-50 border-gray-200 text-gray-800';
     }
@@ -504,53 +492,53 @@ export default function AISuggestions({
   return (
     <div className="bg-white rounded-lg shadow">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <FiZap className="h-5 w-5 text-indigo-600" />
-            <h3 className="text-lg font-medium text-gray-900">AI Suggestions</h3>
-            {suggestions.length > 0 && (
-              <span className="text-sm text-gray-500">({suggestions.length} suggestions)</span>
-            )}
-            {generationCount > 0 && (
-              <span className="text-sm text-gray-500">• Generated {generationCount} time{generationCount > 1 ? 's' : ''}</span>
-            )}
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <FiZap className="h-4 w-4 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">AI Suggestions</h3>
+              {suggestions.length > 0 && (
+                <span className="text-xs text-gray-500">{suggestions.length} suggestions available</span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             {conversationHistory.length > 0 && (
               <button
                 onClick={generateFollowUpSuggestions}
                 disabled={loading}
-                className="flex items-center space-x-1 px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1 px-2 py-1.5 bg-green-500 text-white text-xs rounded-md hover:bg-green-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FiMessageSquare className="h-4 w-4" />
-                <span>Generate Follow-ups</span>
+                <FiMessageSquare className="h-3 w-3" />
+                <span>Follow-ups</span>
               </button>
             )}
             <button
               onClick={() => generateSuggestions(true)}
               disabled={loading}
-              className="flex items-center space-x-1 px-3 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-1 px-2 py-1.5 bg-indigo-500 text-white text-xs rounded-md hover:bg-indigo-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FiPlus className="h-4 w-4" />
-              <span>Generate More</span>
+              <FiPlus className="h-3 w-3" />
+              <span>More</span>
             </button>
             <button
               onClick={() => generateSuggestions(false)}
               disabled={loading}
-              className="flex items-center space-x-1 text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-1 px-2 py-1.5 text-indigo-600 hover:text-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FiRefreshCw className="h-4 w-4" />
-              <span>Refresh All</span>
+              <FiRefreshCw className="h-3 w-3" />
             </button>
             {suggestions.length > 0 && (
               <button
                 onClick={clearOldSuggestions}
                 disabled={loading}
-                className="flex items-center space-x-1 px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1 px-2 py-1.5 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FiX className="h-4 w-4" />
-                <span>Clear All</span>
+                <FiX className="h-3 w-3" />
+                <span>Clear</span>
               </button>
             )}
           </div>
@@ -558,38 +546,58 @@ export default function AISuggestions({
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8 px-6">
+      <div className="border-b border-gray-100">
+        <nav className="flex space-x-6 px-6">
           {[
-            { id: 'ice-breakers', label: 'Ice Breakers', count: suggestions.filter(s => s.type === 'conversation_starter').length },
-            { id: 'discussion-starters', label: 'Discussion Starters', count: suggestions.filter(s => s.type === 'follow_up').length },
-            { id: 'profile', label: 'Profile Tips', count: suggestions.filter(s => s.type === 'profile_tip').length },
-            { id: 'connections', label: 'Connection Ideas', count: suggestions.filter(s => s.type === 'connection_idea').length },
+            { 
+              id: 'ice-breakers', 
+              label: 'Ice Breakers', 
+              count: suggestions.filter(s => s.type === 'conversation_starter').length,
+              description: 'Fun, light questions to start conversations and break the ice'
+            },
+            { 
+              id: 'discussion-starters', 
+              label: 'Discussion Starters', 
+              count: suggestions.filter(s => s.type === 'follow_up').length,
+              description: 'Thought-provoking topics for deeper, meaningful conversations'
+            },
           ].map((tab) => {
             const Icon = getTabIcon(tab.id);
             return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                  activeTab === tab.id
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
-                  {tab.count}
-                </span>
-              </button>
+              <div key={tab.id} className="relative group">
+                <button
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`py-3 px-2 border-b-2 font-medium text-sm flex items-center space-x-2 transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-indigo-500 hover:border-indigo-200'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    activeTab === tab.id
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+                
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                  {tab.description}
+                  {/* Tooltip arrow */}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                </div>
+              </div>
             );
           })}
         </nav>
       </div>
 
       {/* Suggestions */}
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-center space-x-2 mb-4">
           <button
             onClick={() => setShowOnlyNew(!showOnlyNew)}
@@ -609,40 +617,40 @@ export default function AISuggestions({
             }
           </span>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {getFilteredSuggestions().map((suggestion) => (
             <div
               key={suggestion.id}
-              className={`border rounded-lg p-4 ${getSuggestionColor(suggestion.type)} ${
-                suggestion.used ? 'opacity-60' : ''
+              className={`bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 ${
+                suggestion.used ? 'opacity-60' : 'hover:border-indigo-200'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-xs font-medium uppercase tracking-wide">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
                       {suggestion.category}
                     </span>
                     {suggestion.used && (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
                         Used
                       </span>
                     )}
                     {isNewSuggestion(suggestion.timestamp) && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
                         New
                       </span>
                     )}
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-400 ml-auto">
                       {getRelativeTime(suggestion.timestamp)}
                     </span>
                   </div>
-                  <p className="text-sm leading-relaxed">{suggestion.content}</p>
+                  <p className="text-sm leading-relaxed text-gray-700 font-medium">{suggestion.content}</p>
                 </div>
-                <div className="flex items-center space-x-2 ml-4">
+                <div className="flex items-center space-x-2 ml-3">
                   <button
                     onClick={() => handleCopySuggestion(suggestion)}
-                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
                     title="Copy suggestion"
                   >
                     {copiedId === suggestion.id ? (
@@ -654,7 +662,7 @@ export default function AISuggestions({
                   {!suggestion.used && (
                     <button
                       onClick={() => handleUseSuggestion(suggestion)}
-                      className="px-3 py-1 bg-indigo-600 text-white text-xs rounded-md hover:bg-indigo-700 transition-colors duration-200"
+                      className="px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-medium rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-sm hover:shadow-md"
                     >
                       Use
                     </button>
@@ -670,10 +678,7 @@ export default function AISuggestions({
             <FiZap className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-4 text-lg font-medium text-gray-900">No suggestions available</h3>
             <p className="mt-2 text-gray-600">
-              {activeTab === 'ice-breakers' || activeTab === 'discussion-starters'
-                ? 'Start a conversation to get personalized suggestions.'
-                : 'Complete your profile to receive tailored recommendations.'
-              }
+              Start a conversation to get personalized ice breakers and discussion starters.
             </p>
           </div>
         )}
