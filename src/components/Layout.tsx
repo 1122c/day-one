@@ -155,7 +155,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex justify-between h-16 items-center">
             {/* Logo & Nav */}
             <div className="flex items-center space-x-8">
-              <Link href="/" className="text-2xl font-extrabold text-indigo-600 tracking-tight flex items-center">
+              <Link href="/auth/signin" className="text-2xl font-extrabold text-indigo-600 tracking-tight flex items-center">
                 ConnectMind
               </Link>
               <div className="hidden md:flex space-x-2">
