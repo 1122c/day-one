@@ -3,7 +3,18 @@ import Link from 'next/link';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/router';
-import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings, FiMessageSquare, FiBell, FiChevronDown } from 'react-icons/fi';
+import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings, FiMessageSquare, FiBell, FiChevronDown, FiChevronUp, FiHeart as FiMatch, FiEye, FiX } from 'react-icons/fi';
+
+interface Notification {
+  id: string;
+  type: 'message' | 'match' | 'connection' | 'profile_view' | 'system';
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  actionUrl?: string;
+  actionData?: any;
+}
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,7 +23,10 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [user, loading] = useAuthState(auth);
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const [notificationsDropdownOpen, setNotificationsDropdownOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,11 +34,63 @@ export default function Layout({ children }: LayoutProps) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setSettingsDropdownOpen(false);
       }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setNotificationsDropdownOpen(false);
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Generate mock notifications when user is available
+  useEffect(() => {
+    if (user) {
+      const mockNotifications: Notification[] = [
+        {
+          id: '1',
+          type: 'message',
+          title: 'New Message from Sarah',
+          message: 'Sarah sent you a message about your shared interest in technology.',
+          timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+          read: false,
+          actionUrl: '/messages',
+          actionData: { conversationId: 'conv-1' }
+        },
+        {
+          id: '2',
+          type: 'match',
+          title: 'New Match: Alex Chen',
+          message: 'You have a new match with Alex Chen based on shared values.',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+          read: false,
+          actionUrl: '/matches',
+          actionData: { matchId: 'match-1' }
+        },
+        {
+          id: '3',
+          type: 'connection',
+          title: 'Connection Request Accepted',
+          message: 'John Doe accepted your connection request.',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+          read: true,
+          actionUrl: '/connections',
+          actionData: { connectionId: 'conn-1' }
+        },
+        {
+          id: '4',
+          type: 'profile_view',
+          title: 'Profile Viewed',
+          message: 'Someone viewed your profile recently.',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
+          read: true,
+          actionUrl: '/discover',
+          actionData: { viewerId: 'viewer-1' }
+        }
+      ];
+      setNotifications(mockNotifications);
+    }
+  }, [user]);
 
   const navigation = [
     { name: 'Home', href: '/', icon: FiHome },
@@ -32,6 +98,54 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Suggested Users', href: '/matches', icon: FiHeart },
     { name: 'Connections', href: '/connections', icon: FiUsers },
   ];
+
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'message':
+        return <FiMessageSquare className="h-4 w-4 text-blue-600" />;
+      case 'match':
+        return <FiMatch className="h-4 w-4 text-red-600" />;
+      case 'connection':
+        return <FiUsers className="h-4 w-4 text-green-600" />;
+      case 'profile_view':
+        return <FiEye className="h-4 w-4 text-purple-600" />;
+      case 'system':
+        return <FiBell className="h-4 w-4 text-gray-600" />;
+      default:
+        return <FiBell className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const formatTimestamp = (timestamp: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - timestamp.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return timestamp.toLocaleDateString();
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read
+    setNotifications(prev => 
+      prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+    );
+
+    // Close dropdown
+    setNotificationsDropdownOpen(false);
+
+    // Navigate to appropriate page
+    if (notification.actionUrl) {
+      router.push(notification.actionUrl);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-100">
@@ -93,14 +207,97 @@ export default function Layout({ children }: LayoutProps) {
                     <FiMessageSquare className="h-5 w-5 mr-1" />
                     Messages
                   </Link>
-                  <Link
-                    href="/notifications"
-                    className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200"
-                    title="Notifications"
-                  >
-                    <FiBell className="h-5 w-5 mr-1" />
-                    Notifications
-                  </Link>
+                  
+                  {/* Notifications Dropdown */}
+                  <div className="relative" ref={notificationsRef}>
+                    <button
+                      onClick={() => setNotificationsDropdownOpen(!notificationsDropdownOpen)}
+                      className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200 relative"
+                      title="Notifications"
+                    >
+                      <FiBell className="h-5 w-5 mr-1" />
+                      Notifications
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    
+                    {notificationsDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                            {unreadCount > 0 && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {unreadCount} new
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="py-2">
+                          {notifications.length === 0 ? (
+                            <div className="px-4 py-6 text-center">
+                              <FiBell className="mx-auto h-8 w-8 text-gray-400" />
+                              <p className="mt-2 text-sm text-gray-500">No notifications yet</p>
+                            </div>
+                          ) : (
+                            notifications.map((notification) => (
+                              <div
+                                key={notification.id}
+                                className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                                  !notification.read ? 'bg-blue-50' : ''
+                                }`}
+                                onClick={() => handleNotificationClick(notification)}
+                              >
+                                <div className="flex items-start space-x-3">
+                                  <div className="flex-shrink-0 mt-0.5">
+                                    {getNotificationIcon(notification.type)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <p className={`text-sm font-medium ${
+                                        !notification.read ? 'text-gray-900' : 'text-gray-700'
+                                      }`}>
+                                        {notification.title}
+                                      </p>
+                                      <span className="text-xs text-gray-500 ml-2">
+                                        {formatTimestamp(notification.timestamp)}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                      {notification.message}
+                                    </p>
+                                    {!notification.read && (
+                                      <div className="mt-2">
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                          New
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        
+                        {notifications.length > 0 && (
+                          <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                            <Link
+                              href="/notifications"
+                              className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                              onClick={() => setNotificationsDropdownOpen(false)}
+                            >
+                              View all notifications →
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex items-center space-x-2 bg-indigo-50 px-3 py-1 rounded-full">
                     <div className="w-8 h-8 bg-indigo-200 rounded-full flex items-center justify-center font-bold text-indigo-700">
                       {user.displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
