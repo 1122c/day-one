@@ -40,6 +40,12 @@ export default function MatchDashboard({
           email: 'alex@example.com',
           name: 'Alex Chen',
           bio: 'Product manager passionate about building meaningful products that help people connect and grow together.',
+          age: '28',
+          location: 'San Francisco, CA',
+          occupation: 'Product Manager',
+          education: 'MBA, Stanford University',
+          interests: ['Product Strategy', 'User Research', 'Team Leadership'],
+          socialProfiles: [],
           values: {
             coreValues: ['Growth', 'Connection', 'Innovation'],
             personalGoals: ['Professional Networking', 'Mentorship'],
@@ -68,6 +74,12 @@ export default function MatchDashboard({
           email: 'sarah@example.com',
           name: 'Sarah Johnson',
           bio: 'UX designer focused on creating inclusive and accessible digital experiences that bring people together.',
+          age: '32',
+          location: 'New York, NY',
+          occupation: 'UX Designer',
+          education: 'BFA, Parsons School of Design',
+          interests: ['User Experience', 'Accessibility', 'Design Systems'],
+          socialProfiles: [],
           values: {
             coreValues: ['Empathy', 'Authenticity', 'Collaboration'],
             personalGoals: ['Learning', 'Support'],
@@ -255,21 +267,30 @@ export default function MatchDashboard({
             <div className="px-6 pb-6">
               <div className="flex space-x-2 mb-3">
                 <button
-                  onClick={() => onAcceptMatch(match.id)}
+                  onClick={() => {
+                    console.log('Accept button clicked for match:', match.id);
+                    onAcceptMatch(match.id);
+                  }}
                   className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors duration-200"
                 >
                   <FiHeart className="inline h-4 w-4 mr-1" />
                   Accept
                 </button>
                 <button
-                  onClick={() => onStartConversation(match.id)}
+                  onClick={() => {
+                    console.log('Message button clicked for match:', match.id);
+                    onStartConversation(match.id);
+                  }}
                   className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors duration-200"
                 >
                   <FiMessageSquare className="inline h-4 w-4 mr-1" />
                   Message
                 </button>
                 <button
-                  onClick={() => onRejectMatch(match.id)}
+                  onClick={() => {
+                    console.log('Reject button clicked for match:', match.id);
+                    onRejectMatch(match.id);
+                  }}
                   className="px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
                 >
                   <FiStar className="h-4 w-4" />
@@ -279,14 +300,20 @@ export default function MatchDashboard({
               {/* Secondary Action Buttons */}
               <div className="flex space-x-2">
                 <button
-                  onClick={() => onUnfollowProfile(match.matchedUser)}
+                  onClick={() => {
+                    console.log('Unfollow button clicked for profile:', match.matchedUser.name);
+                    onUnfollowProfile(match.matchedUser);
+                  }}
                   className="flex-1 bg-red-50 text-red-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-red-100 transition-colors duration-200 border border-red-200"
                 >
                   <FiUserMinus className="inline h-3 w-3 mr-1" />
                   Unfollow
                 </button>
                 <button
-                  onClick={() => onReportProfile(match.matchedUser)}
+                  onClick={() => {
+                    console.log('Report button clicked for profile:', match.matchedUser.name);
+                    onReportProfile(match.matchedUser);
+                  }}
                   className="flex-1 bg-yellow-50 text-yellow-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-yellow-100 transition-colors duration-200 border border-yellow-200"
                 >
                   <FiFlag className="inline h-3 w-3 mr-1" />

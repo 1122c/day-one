@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import Layout from '@/components/Layout';
 import MatchDashboard from '@/components/matches/MatchDashboard';
 import { UserProfile, Match } from '@/types/user';
+import { useChat } from '@/contexts/ChatContext';
 
 export default function MatchesPage() {
   const [user, loading] = useAuthState(auth);
@@ -13,6 +14,7 @@ export default function MatchesPage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [matches, setMatches] = useState<Match[]>([]);
   const router = useRouter();
+  const { openChat } = useChat();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -57,6 +59,7 @@ export default function MatchesPage() {
               showEmail: false,
               showSocialProfiles: true,
               allowMessaging: true,
+              messageSource: 'connections',
               showOnlineStatus: true,
               showReadReceipts: true,
               showTypingIndicators: true,
@@ -126,16 +129,72 @@ export default function MatchesPage() {
   const handleAcceptMatch = (matchId: string) => {
     console.log('Accepting match:', matchId);
     // TODO: Implement match acceptance logic
+    alert('Match accepted! You can now start a conversation.');
   };
 
   const handleRejectMatch = (matchId: string) => {
     console.log('Rejecting match:', matchId);
     // TODO: Implement match rejection logic
+    alert('Match rejected. You won\'t see this person in your suggestions anymore.');
   };
 
   const handleStartConversation = (matchId: string) => {
     console.log('Starting conversation with match:', matchId);
-    // TODO: Implement conversation start logic
+    
+    // Find the matched user profile
+    const match = mockMatches.find(m => m.id === matchId);
+    if (match) {
+      const matchedUserId = match.userIds.find(id => id !== userProfile.id);
+      // For now, we'll use a mock profile since we don't have the actual user data
+      // In a real app, you'd fetch the actual user profile
+      const mockMatchedUser: UserProfile = {
+        id: matchedUserId || 'unknown',
+        name: matchedUserId === 'user2' ? 'Alex Chen' : 'Sarah Johnson',
+        email: matchedUserId === 'user2' ? 'alex@example.com' : 'sarah@example.com',
+        bio: matchedUserId === 'user2' 
+          ? 'Product manager passionate about building meaningful products that help people connect and grow together.'
+          : 'UX designer focused on creating inclusive and accessible digital experiences that bring people together.',
+        age: matchedUserId === 'user2' ? '28' : '32',
+        location: matchedUserId === 'user2' ? 'San Francisco, CA' : 'New York, NY',
+        occupation: matchedUserId === 'user2' ? 'Product Manager' : 'UX Designer',
+        education: matchedUserId === 'user2' ? 'MBA, Stanford University' : 'BFA, Parsons School of Design',
+        interests: matchedUserId === 'user2' 
+          ? ['Product Strategy', 'User Research', 'Team Leadership']
+          : ['User Experience', 'Accessibility', 'Design Systems'],
+        socialProfiles: [],
+        values: {
+          coreValues: matchedUserId === 'user2' 
+            ? ['Growth', 'Connection', 'Innovation']
+            : ['Empathy', 'Authenticity', 'Collaboration'],
+          personalGoals: matchedUserId === 'user2' 
+            ? ['Professional Networking', 'Mentorship']
+            : ['Learning', 'Support'],
+          preferredCommunication: matchedUserId === 'user2' 
+            ? ['Video Calls', 'Text Chat']
+            : ['Video Calls', 'In-Person Meetings'],
+          availability: {
+            timezone: matchedUserId === 'user2' ? 'PST' : 'EST',
+            preferredTimes: matchedUserId === 'user2' ? ['Evening', 'Weekends'] : ['Morning', 'Afternoon'],
+          },
+        },
+        privacy: {
+          profileVisibility: 'public',
+          showEmail: false,
+          showSocialProfiles: true,
+          allowMessaging: true,
+          messageSource: 'connections',
+          showOnlineStatus: true,
+          showReadReceipts: true,
+          showTypingIndicators: true,
+          allowProfileViews: true,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      // Open the chat with the matched user
+      openChat(userProfile, mockMatchedUser, match);
+    }
   };
 
   const handleUnfollowProfile = async (profile: UserProfile) => {
