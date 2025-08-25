@@ -553,13 +553,13 @@ export default function AISuggestions({
               id: 'ice-breakers', 
               label: 'Ice Breakers', 
               count: suggestions.filter(s => s.type === 'conversation_starter').length,
-              description: 'Fun, light questions to start conversations and break the ice'
+              description: 'Fun questions to start conversations'
             },
             { 
               id: 'discussion-starters', 
               label: 'Discussion Starters', 
               count: suggestions.filter(s => s.type === 'follow_up').length,
-              description: 'Thought-provoking topics for deeper, meaningful conversations'
+              description: 'Deep topics for meaningful conversations'
             },
           ].map((tab) => {
             const Icon = getTabIcon(tab.id);
@@ -585,8 +585,10 @@ export default function AISuggestions({
                 </button>
                 
                 {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                  {tab.description}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs">
+                  <div className="text-center leading-relaxed">
+                    {tab.description}
+                  </div>
                   {/* Tooltip arrow */}
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                 </div>

@@ -92,7 +92,7 @@ export default function FloatingChat({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-96 h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col">
+    <div className="fixed bottom-4 right-4 z-50 w-[500px] h-[700px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
         <div className="flex items-center space-x-3">
@@ -127,14 +127,14 @@ export default function FloatingChat({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-xs px-3 py-2 rounded-lg ${
+              className={`max-w-sm px-4 py-3 rounded-lg ${
                 message.sender === 'user'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-white text-gray-800 border border-gray-200'
@@ -194,7 +194,7 @@ export default function FloatingChat({
 
       {/* AI Suggestions Panel */}
       {showAISuggestions && currentUser && (
-        <div className="border-t border-indigo-200 bg-white max-h-80 overflow-y-auto">
+        <div className="border-t border-indigo-200 bg-white max-h-96 overflow-y-auto">
           <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600">
             <h4 className="text-xs font-semibold text-white text-center">
               ✨ AI Conversation Helpers
@@ -202,7 +202,7 @@ export default function FloatingChat({
           </div>
           <AISuggestions
             currentUser={currentUser}
-            matchedUser={matchedUser}
+            matchedUser={matchedUser || undefined}
             match={match}
             onUseSuggestion={handleUseSuggestion}
           />
@@ -218,7 +218,7 @@ export default function FloatingChat({
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             className="flex-1 resize-none border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            rows={2}
+            rows={3}
           />
           <button
             onClick={handleSendMessage}
