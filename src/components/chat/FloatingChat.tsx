@@ -167,10 +167,10 @@ export default function FloatingChat({
 
       {/* AI Suggestions Toggle */}
       {currentUser && (
-        <div className="px-3 py-2 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="px-6 py-3 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <button
             onClick={() => setShowAISuggestions(!showAISuggestions)}
-            className={`w-full text-center font-medium py-2 px-3 rounded-md transition-all duration-200 ${
+            className={`mx-auto block text-center font-medium py-2 px-6 rounded-md transition-all duration-200 ${
               showAISuggestions 
                 ? 'bg-red-500 text-white hover:bg-red-600 shadow-md' 
                 : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg'

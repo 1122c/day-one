@@ -298,7 +298,7 @@ export default function AISuggestions({
           id: `icebreaker-${Date.now().toString()}-${index}-${Math.random().toString()}`,
           type: 'conversation_starter' as const,
           content,
-          category: 'Ice Breaker - AI Generated',
+          category: 'Ice Breaker',
           used: false,
           timestamp: new Date(),
         })),
@@ -307,7 +307,7 @@ export default function AISuggestions({
           id: `discussion-${Date.now().toString()}-${index}-${Math.random().toString()}`,
           type: 'follow_up' as const,
           content,
-          category: 'Discussion Starter - AI Generated',
+          category: 'Discussion Starter',
           used: false,
           timestamp: new Date(),
         })),
@@ -316,7 +316,7 @@ export default function AISuggestions({
           id: `growth-${Date.now().toString()}-${index}-${Math.random().toString()}`,
           type: 'connection_idea' as const,
           content,
-          category: 'Growth Opportunity - AI Generated',
+          category: 'Growth Opportunity',
           used: false,
           timestamp: new Date(),
         })),
@@ -522,7 +522,7 @@ export default function AISuggestions({
               className="flex items-center space-x-1 px-2 py-1.5 bg-indigo-500 text-white text-xs rounded-md hover:bg-indigo-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiPlus className="h-3 w-3" />
-              <span>More</span>
+              <span>New</span>
             </button>
             <button
               onClick={() => generateSuggestions(false)}
@@ -567,17 +567,23 @@ export default function AISuggestions({
               <div key={tab.id} className="relative group">
                 <button
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-3 px-2 border-b-2 font-medium text-sm flex items-center space-x-2 transition-all duration-200 ${
+                  className={`py-3 px-4 border-b-2 font-medium text-sm flex items-center space-x-2 transition-all duration-200 rounded-t-lg ${
                     activeTab === tab.id
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-indigo-500 hover:border-indigo-200'
+                      ? tab.id === 'ice-breakers' 
+                        ? 'border-blue-500 text-blue-700 bg-blue-50'
+                        : 'border-purple-500 text-purple-700 bg-purple-50'
+                      : tab.id === 'ice-breakers'
+                        ? 'border-transparent text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200'
+                        : 'border-transparent text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:border-purple-200'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{tab.label}</span>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                     activeTab === tab.id
-                      ? 'bg-indigo-100 text-indigo-700'
+                      ? tab.id === 'ice-breakers'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-purple-100 text-purple-700'
                       : 'bg-gray-100 text-gray-600'
                   }`}>
                     {tab.count}
