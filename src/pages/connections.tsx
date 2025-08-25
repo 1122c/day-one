@@ -4,13 +4,15 @@ import { useRouter } from 'next/router';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Layout from '@/components/Layout';
-import { FiUsers, FiPlus, FiUserMinus, FiFlag, FiMessageSquare, FiEye } from 'react-icons/fi';
+import { FiUsers, FiPlus, FiUserMinus, FiFlag, FiMessageSquare, FiEye, FiX } from 'react-icons/fi';
 import { UserProfile } from '@/types/user';
 
 export default function ConnectionsPage() {
   const [user, loading] = useAuthState(auth);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [selectedConnection, setSelectedConnection] = useState<UserProfile | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -179,6 +181,54 @@ export default function ConnectionsPage() {
     }
   };
 
+  const handleViewProfile = (connection: UserProfile) => {
+    setSelectedConnection(connection);
+    setShowProfileModal(true);
+  };
+
+  const calculateOverlap = (connection: UserProfile) => {
+    if (!userProfile) return { values: 0, goals: 0, interests: 0, overall: 0 };
+
+    // Calculate values overlap
+    const sharedValues = userProfile.values.coreValues.filter(value => 
+      connection.values.coreValues.includes(value)
+    );
+    const valuesOverlap = userProfile.values.coreValues.length > 0 
+      ? (sharedValues.length / userProfile.values.coreValues.length) * 100 
+      : 0;
+
+    // Calculate goals overlap
+    const sharedGoals = userProfile.values.personalGoals.filter(goal => 
+      connection.values.personalGoals.includes(goal)
+    );
+    const goalsOverlap = userProfile.values.personalGoals.length > 0 
+      ? (sharedGoals.length / userProfile.values.personalGoals.length) * 100 
+      : 0;
+
+    // Calculate interests overlap
+    const userInterests = userProfile.interests || [];
+    const connectionInterests = connection.interests || [];
+    const sharedInterests = userInterests.filter(interest => 
+      connectionInterests.includes(interest)
+    );
+    const interestsOverlap = userInterests.length > 0 
+      ? (sharedInterests.length / userInterests.length) * 100 
+      : 0;
+
+    // Calculate overall overlap (weighted average)
+    const overallOverlap = Math.round((valuesOverlap * 0.4 + goalsOverlap * 0.4 + interestsOverlap * 0.2));
+
+    return {
+      values: Math.round(valuesOverlap),
+      goals: Math.round(goalsOverlap),
+      interests: Math.round(interestsOverlap),
+      overall: overallOverlap,
+      sharedValues,
+      sharedGoals,
+      sharedInterests
+    };
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -270,7 +320,7 @@ export default function ConnectionsPage() {
                 <div className="p-6">
                   <div className="flex space-x-2 mb-3">
                     <button
-                      onClick={() => router.push(`/discover?user=${connection.id}`)}
+                      onClick={() => handleViewProfile(connection)}
                       className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors duration-200"
                     >
                       <FiEye className="inline h-4 w-4 mr-1" />
@@ -308,6 +358,229 @@ export default function ConnectionsPage() {
           </div>
         )}
       </div>
+
+      {/* Profile Modal */}
+      {showProfileModal && selectedConnection && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <FiUsers className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedConnection.name}</h2>
+                    <p className="text-gray-600">{selectedConnection.occupation}</p>
+                    <p className="text-sm text-gray-500">{selectedConnection.location}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <FiX className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Compatibility Overlap */}
+              {userProfile && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <FiUsers className="h-5 w-5 mr-2 text-indigo-600" />
+                    Compatibility with You
+                  </h3>
+                  {(() => {
+                    const overlap = calculateOverlap(selectedConnection);
+                    return (
+                      <div className="space-y-4">
+                        {/* Overall Match */}
+                        <div>
+                          <div className="flex items-center justify-between text-sm mb-2">
+                            <span className="font-medium text-gray-700">Overall Match</span>
+                            <span className="font-bold text-indigo-600">{overlap.overall}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-300"
+                              style={{ width: `${overlap.overall}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Values Alignment */}
+                        <div>
+                          <div className="flex items-center justify-between text-sm mb-2">
+                            <span className="font-medium text-gray-700">Values Alignment</span>
+                            <span className="font-bold text-blue-600">{overlap.values}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                              style={{ width: `${overlap.values}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Goals Alignment */}
+                        <div>
+                          <div className="flex items-center justify-between text-sm mb-2">
+                            <span className="font-medium text-gray-700">Goals Alignment</span>
+                            <span className="font-bold text-green-600">{overlap.goals}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                              style={{ width: `${overlap.goals}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Interests Overlap */}
+                        <div>
+                          <div className="flex items-center justify-between text-sm mb-2">
+                            <span className="font-medium text-gray-700">Interests Overlap</span>
+                            <span className="font-bold text-purple-600">{overlap.interests}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className="bg-purple-600 h-3 rounded-full transition-all duration-300"
+                              style={{ width: `${overlap.interests}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Bio */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">About</h3>
+                <p className="text-gray-700 leading-relaxed">{selectedConnection.bio}</p>
+              </div>
+
+              {/* Core Values */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Core Values</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedConnection.values.coreValues.map((value) => {
+                    const isShared = userProfile && userProfile.values.coreValues.includes(value);
+                    return (
+                      <span
+                        key={value}
+                        className={`px-3 py-2 rounded-full text-sm font-medium ${
+                          isShared 
+                            ? 'bg-green-100 text-green-800 border-2 border-green-300' 
+                            : 'bg-indigo-100 text-indigo-800'
+                        }`}
+                      >
+                        {value}
+                        {isShared && <span className="ml-1 text-xs">✓</span>}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Personal Goals */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Personal Goals</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedConnection.values.personalGoals.map((goal) => {
+                    const isShared = userProfile && userProfile.values.personalGoals.includes(goal);
+                    return (
+                      <span
+                        key={goal}
+                        className={`px-3 py-2 rounded-full text-sm font-medium ${
+                          isShared 
+                            ? 'bg-green-100 text-green-800 border-2 border-green-300' 
+                            : 'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {goal}
+                        {isShared && <span className="ml-1 text-xs">✓</span>}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Communication Preferences */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Communication Preferences</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedConnection.values.preferredCommunication.map((method) => (
+                    <span
+                      key={method}
+                      className="px-3 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
+                    >
+                      {method}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interests */}
+              {selectedConnection.interests && selectedConnection.interests.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Interests</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedConnection.interests.map((interest) => {
+                      const isShared = userProfile && userProfile.interests && userProfile.interests.includes(interest);
+                      return (
+                        <span
+                          key={interest}
+                          className={`px-3 py-2 rounded-full text-sm font-medium ${
+                            isShared 
+                              ? 'bg-green-100 text-green-800 border-2 border-green-300' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {interest}
+                          {isShared && <span className="ml-1 text-xs">✓</span>}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Education */}
+              {selectedConnection.education && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Education</h3>
+                  <p className="text-gray-700">{selectedConnection.education}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => router.push(`/messages?user=${selectedConnection.id}`)}
+                  className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors duration-200"
+                >
+                  <FiMessageSquare className="inline h-4 w-4 mr-2" />
+                  Send Message
+                </button>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
