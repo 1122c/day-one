@@ -10,6 +10,7 @@ interface ProfileDiscoveryProps {
   onLikeProfile: (profile: UserProfile) => void;
   onUnfollowProfile: (profile: UserProfile) => void;
   onReportProfile: (profile: UserProfile) => void;
+  onBlockUser: (profile: UserProfile) => void;
 }
 
 interface FilterOptions {
@@ -27,6 +28,7 @@ export default function ProfileDiscovery({
   onLikeProfile,
   onUnfollowProfile,
   onReportProfile,
+  onBlockUser,
 }: ProfileDiscoveryProps) {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<UserProfile[]>([]);
@@ -474,6 +476,17 @@ export default function ProfileDiscovery({
                     >
                       <FiFlag className="inline h-3 w-3 mr-1" />
                       Report
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to block ${profile.name}? This will:\n\n• Remove any existing connection\n• Archive all conversations\n• Prevent future interactions\n• They won't be able to see your profile or send messages\n\nThis action cannot be easily undone.`)) {
+                          onBlockUser(profile);
+                        }
+                      }}
+                      className="flex-1 bg-gray-50 text-gray-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
+                    >
+                      <FiUserMinus className="inline h-3 w-3 mr-1" />
+                      Block
                     </button>
                   </div>
                 </div>

@@ -8,7 +8,7 @@ import MatchDashboard from '@/components/matches/MatchDashboard';
 import { UserProfile, Match } from '@/types/user';
 import { FiUsers, FiSearch, FiHeart, FiMessageSquare, FiZap, FiUserMinus, FiFlag } from 'react-icons/fi';
 import { useChat } from '@/contexts/ChatContext';
-import { getUserProfile, getPotentialMatches, getMatchesForUser, createMatch } from '@/services/firebaseService';
+import { getUserProfile, getPotentialMatches, getMatchesForUser, createMatch, blockUser } from '@/services/firebaseService';
 
 export default function DiscoverPage() {
   const [user, loading] = useAuthState(auth);
@@ -185,6 +185,25 @@ export default function DiscoverPage() {
     }
   };
 
+  const handleBlockUser = async (profile: UserProfile) => {
+    try {
+      if (!userProfile) return;
+      
+      console.log('Blocking user:', profile.name);
+      await blockUser(userProfile.id, profile.id, 'User blocked from discover page');
+      
+      // Remove from current view
+      setMatches(prev => prev.filter(match => 
+        !match.userIds.includes(profile.id)
+      ));
+      
+      alert(`${profile.name} has been blocked successfully.`);
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      alert('Failed to block user. Please try again.');
+    }
+  };
+
   const handleAcceptMatch = (matchId: string) => {
     // In a real app, this would accept the match
     console.log('Accepted match:', matchId);
@@ -287,6 +306,7 @@ export default function DiscoverPage() {
             onLikeProfile={handleLikeProfile}
             onUnfollowProfile={handleUnfollowProfile}
             onReportProfile={handleReportProfile}
+            onBlockUser={handleBlockUser}
           />
         )}
 
@@ -299,6 +319,7 @@ export default function DiscoverPage() {
             onStartConversation={handleStartMatchConversation}
             onUnfollowProfile={handleUnfollowProfile}
             onReportProfile={handleReportProfile}
+            onBlockUser={handleBlockUser}
           />
         )}
 

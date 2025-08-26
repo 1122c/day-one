@@ -11,6 +11,7 @@ interface MatchDashboardProps {
   onStartConversation: (matchId: string) => void;
   onUnfollowProfile: (profile: UserProfile) => void;
   onReportProfile: (profile: UserProfile) => void;
+  onBlockUser: (profile: UserProfile) => void;
 }
 
 interface MatchWithProfile extends Match {
@@ -25,6 +26,7 @@ export default function MatchDashboard({
   onStartConversation,
   onUnfollowProfile,
   onReportProfile,
+  onBlockUser,
 }: MatchDashboardProps) {
   const [matchDetails, setMatchDetails] = useState<MatchWithProfile[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<MatchWithProfile | null>(null);
@@ -317,6 +319,18 @@ export default function MatchDashboard({
                 >
                   <FiFlag className="inline h-3 w-3 mr-1" />
                   Report
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to block ${match.matchedUser.name}? This will:\n\n• Remove any existing connection\n• Archive all conversations\n• Prevent future interactions\n• They won't be able to see your profile or send messages\n\nThis action cannot be easily undone.`)) {
+                      console.log('Block button clicked for profile:', match.matchedUser.name);
+                      onBlockUser(match.matchedUser);
+                    }
+                  }}
+                  className="flex-1 bg-gray-50 text-gray-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
+                >
+                  <FiUserMinus className="inline h-3 w-3 mr-1" />
+                  Block
                 </button>
               </div>
             </div>

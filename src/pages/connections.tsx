@@ -3,6 +3,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/router';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { blockUser } from '@/services/firebaseService';
 import Layout from '@/components/Layout';
 import { FiUsers, FiPlus, FiUserMinus, FiFlag, FiMessageSquare, FiEye, FiX } from 'react-icons/fi';
 import { UserProfile } from '@/types/user';
@@ -181,6 +182,20 @@ export default function ConnectionsPage() {
     }
   };
 
+  const handleBlockUser = async (profile: UserProfile) => {
+    try {
+      if (!userProfile) return;
+      
+      console.log('Blocking user:', profile.name);
+      await blockUser(userProfile.id, profile.id, 'User blocked from connections page');
+      
+      alert(`${profile.name} has been blocked successfully.`);
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      alert('Failed to block user. Please try again.');
+    }
+  };
+
   const handleViewProfile = (connection: UserProfile) => {
     setSelectedConnection(connection);
     setShowProfileModal(true);
@@ -350,6 +365,17 @@ export default function ConnectionsPage() {
                     >
                       <FiFlag className="inline h-3 w-3 mr-1" />
                       Report
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to block ${connection.name}? This will:\n\n• Remove any existing connection\n• Archive all conversations\n• Prevent future interactions\n• They won't be able to see your profile or send messages\n\nThis action cannot be easily undone.`)) {
+                          handleBlockUser(connection);
+                        }
+                      }}
+                      className="flex-1 bg-gray-50 text-gray-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
+                    >
+                      <FiUserMinus className="inline h-3 w-3 mr-1" />
+                      Block
                     </button>
                   </div>
                 </div>

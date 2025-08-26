@@ -3,6 +3,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/router';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { blockUser } from '@/services/firebaseService';
 import Layout from '@/components/Layout';
 import MatchDashboard from '@/components/matches/MatchDashboard';
 import { UserProfile, Match } from '@/types/user';
@@ -229,6 +230,25 @@ export default function MatchesPage() {
     }
   };
 
+  const handleBlockUser = async (profile: UserProfile) => {
+    try {
+      if (!userProfile) return;
+      
+      console.log('Blocking user:', profile.name);
+      await blockUser(userProfile.id, profile.id, 'User blocked from suggested users page');
+      
+      // Remove from current view
+      setMatches(prev => prev.filter(match => 
+        !match.userIds.includes(profile.id)
+      ));
+      
+      alert(`${profile.name} has been blocked successfully.`);
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      alert('Failed to block user. Please try again.');
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -245,6 +265,7 @@ export default function MatchesPage() {
           onStartConversation={handleStartConversation}
           onUnfollowProfile={handleUnfollowProfile}
           onReportProfile={handleReportProfile}
+          onBlockUser={handleBlockUser}
         />
       </div>
     </Layout>
