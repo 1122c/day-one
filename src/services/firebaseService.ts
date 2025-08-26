@@ -302,6 +302,180 @@ export async function removeConnection(connectionId: string): Promise<void> {
 }
 
 // ============================================================================
+// USER BLOCKING SYSTEM
+// ============================================================================
+
+export async function blockUser(
+  currentUserId: string,
+  blockedUserId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    console.log('🚫 Blocking user:', blockedUserId);
+    
+    // Create or update block record
+    const blockData = {
+      blockerId: currentUserId,
+      blockedUserId: blockedUserId,
+      reason: reason || 'User blocked',
+      blockedAt: serverTimestamp(),
+      status: 'active' as const
+    };
+
+    const blockRef = doc(db, 'userBlocks', `${currentUserId}_${blockedUserId}`);
+    await setDoc(blockRef, blockData);
+
+    // Remove any existing connection
+    await removeConnectionIfExists(currentUserId, blockedUserId);
+
+    // Archive any existing conversations
+    await archiveConversationsBetweenUsers(currentUserId, blockedUserId);
+
+    console.log('✅ User blocked successfully');
+  } catch (error) {
+    console.error('❌ Error blocking user:', error);
+    throw new Error('Failed to block user');
+  }
+}
+
+export async function unblockUser(
+  currentUserId: string,
+  blockedUserId: string
+): Promise<void> {
+  try {
+    console.log('🔓 Unblocking user:', blockedUserId);
+    
+    const blockRef = doc(db, 'userBlocks', `${currentUserId}_${blockedUserId}`);
+    await deleteDoc(blockRef);
+
+    console.log('✅ User unblocked successfully');
+  } catch (error) {
+    console.error('❌ Error unblocking user:', error);
+    throw new Error('Failed to unblock user');
+  }
+}
+
+export async function isUserBlocked(
+  currentUserId: string,
+  otherUserId: string
+): Promise<boolean> {
+  try {
+    const blockRef = doc(db, 'userBlocks', `${currentUserId}_${otherUserId}`);
+    const blockSnap = await getDoc(blockRef);
+    
+    if (blockSnap.exists()) {
+      const blockData = blockSnap.data();
+      return blockData.status === 'active';
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('❌ Error checking if user is blocked:', error);
+    return false;
+  }
+}
+
+export async function getBlockedUsers(userId: string): Promise<string[]> {
+  try {
+    const blocksRef = collection(db, 'userBlocks');
+    const q = query(
+      blocksRef,
+      where('blockerId', '==', userId),
+      where('status', '==', 'active')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const blockedUserIds: string[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      blockedUserIds.push(data.blockedUserId);
+    });
+
+    return blockedUserIds;
+  } catch (error) {
+    console.error('❌ Error getting blocked users:', error);
+    return [];
+  }
+}
+
+export async function getUsersWhoBlockedMe(userId: string): Promise<string[]> {
+  try {
+    const blocksRef = collection(db, 'userBlocks');
+    const q = query(
+      blocksRef,
+      where('blockedUserId', '==', userId),
+      where('status', '==', 'active')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const blockerIds: string[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      blockerIds.push(data.blockerId);
+    });
+
+    return blockerIds;
+  } catch (error) {
+    console.error('❌ Error getting users who blocked me:', error);
+    return [];
+  }
+}
+
+// Helper function to remove connection if it exists
+async function removeConnectionIfExists(user1Id: string, user2Id: string): Promise<void> {
+  try {
+    const connectionsRef = collection(db, 'connections');
+    const q = query(
+      connectionsRef,
+      where('userIds', 'array-contains', user1Id),
+      where('status', '==', 'active')
+    );
+
+    const querySnapshot = await getDocs(q);
+    
+    for (const doc of querySnapshot.docs) {
+      const data = doc.data();
+      if (data.userIds.includes(user2Id)) {
+        await deleteDoc(doc.ref);
+        console.log('✅ Connection removed due to blocking');
+        break;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error removing connection:', error);
+  }
+}
+
+// Helper function to archive conversations between blocked users
+async function archiveConversationsBetweenUsers(user1Id: string, user2Id: string): Promise<void> {
+  try {
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('participantIds', 'array-contains', user1Id),
+      where('status', '==', 'active')
+    );
+
+    const querySnapshot = await getDocs(q);
+    
+    for (const doc of querySnapshot.docs) {
+      const data = doc.data();
+      if (data.participantIds.includes(user2Id)) {
+        await updateDoc(doc.ref, { 
+          status: 'archived',
+          updatedAt: serverTimestamp()
+        });
+        console.log('✅ Conversation archived due to blocking');
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error archiving conversations:', error);
+  }
+}
+
+// ============================================================================
 // NOTIFICATIONS SYSTEM
 // ============================================================================
 
@@ -345,6 +519,7 @@ export async function getNotificationsForUser(
       const data = doc.data();
       notifications.push({
         id: doc.id,
+        userId: data.userId || '',
         type: data.type,
         title: data.title,
         message: data.message,
@@ -411,10 +586,40 @@ export function subscribeToUserProfile(
     if (doc.exists()) {
       const data = doc.data();
       const profile: UserProfile = {
-        ...data,
         id: doc.id,
+        email: data.email || '',
+        name: data.name || 'User',
+        profilePicture: data.profilePicture,
+        bio: data.bio,
+        age: data.age,
+        location: data.location,
+        occupation: data.occupation,
+        education: data.education,
+        interests: data.interests || [],
+        socialProfiles: data.socialProfiles || [],
+        values: data.values || {
+          coreValues: [],
+          personalGoals: [],
+          preferredCommunication: [],
+          availability: {
+            timezone: 'UTC',
+            preferredTimes: []
+          }
+        },
         createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        isDeactivated: data.isDeactivated || false,
+        privacy: data.privacy || {
+          profileVisibility: 'public',
+          showEmail: true,
+          showSocialProfiles: true,
+          allowMessaging: true,
+          messageSource: 'anyone',
+          showOnlineStatus: true,
+          showReadReceipts: true,
+          showTypingIndicators: true,
+          allowProfileViews: true
+        }
       };
       callback(profile);
     } else {
@@ -441,6 +646,7 @@ export function subscribeToNotifications(
       const data = doc.data();
       notifications.push({
         id: doc.id,
+        userId: data.userId || '',
         type: data.type,
         title: data.title,
         message: data.message,
@@ -546,11 +752,41 @@ export async function searchUsers(
       if (doc.id !== currentUserId) {
         const data = doc.data();
         users.push({
-          ...data,
           id: doc.id,
+          email: data.email || '',
+          name: data.name || 'User',
+          profilePicture: data.profilePicture,
+          bio: data.bio,
+          age: data.age,
+          location: data.location,
+          occupation: data.occupation,
+          education: data.education,
+          interests: data.interests || [],
+          socialProfiles: data.socialProfiles || [],
+          values: data.values || {
+            coreValues: [],
+            personalGoals: [],
+            preferredCommunication: [],
+            availability: {
+              timezone: 'UTC',
+              preferredTimes: []
+            }
+          },
           createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date()
-        } as UserProfile);
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          isDeactivated: data.isDeactivated || false,
+          privacy: data.privacy || {
+            profileVisibility: 'public',
+            showEmail: true,
+            showSocialProfiles: true,
+            allowMessaging: true,
+            messageSource: 'anyone',
+            showOnlineStatus: true,
+            showReadReceipts: true,
+            showTypingIndicators: true,
+            allowProfileViews: true
+          }
+        });
       }
     });
 
@@ -583,10 +819,40 @@ export async function getPotentialMatches(
       if (doc.id !== currentUserId) {
         const data = doc.data();
         const userProfile: UserProfile = {
-          ...data,
           id: doc.id,
+          email: data.email || '',
+          name: data.name || 'User',
+          profilePicture: data.profilePicture,
+          bio: data.bio,
+          age: data.age,
+          location: data.location,
+          occupation: data.occupation,
+          education: data.education,
+          interests: data.interests || [],
+          socialProfiles: data.socialProfiles || [],
+          values: data.values || {
+            coreValues: [],
+            personalGoals: [],
+            preferredCommunication: [],
+            availability: {
+              timezone: 'UTC',
+              preferredTimes: []
+            }
+          },
           createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date()
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          isDeactivated: data.isDeactivated || false,
+          privacy: data.privacy || {
+            profileVisibility: 'public',
+            showEmail: true,
+            showSocialProfiles: true,
+            allowMessaging: true,
+            messageSource: 'anyone',
+            showOnlineStatus: true,
+            showReadReceipts: true,
+            showTypingIndicators: true,
+            allowProfileViews: true
+          }
         };
 
         // Basic compatibility check

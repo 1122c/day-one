@@ -145,6 +145,27 @@ service cloud.firestore {
     }
     
     // ============================================================================
+    // USER BLOCKS
+    // ============================================================================
+    match /userBlocks/{blockId} {
+      // Users can read their own blocks
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.blockerId || request.auth.uid == resource.data.blockedUserId);
+      
+      // Users can create blocks for themselves
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.blockerId;
+      
+      // Users can update their own blocks
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.blockerId;
+      
+      // Users can delete their own blocks
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.blockerId;
+    }
+    
+    // ============================================================================
     // ANALYTICS (Read-only for authenticated users)
     // ============================================================================
     match /analytics/{document=**} {

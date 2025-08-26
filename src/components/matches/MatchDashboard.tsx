@@ -31,8 +31,7 @@ export default function MatchDashboard({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you'd fetch the matched user profiles here
-    // For now, we'll simulate this with mock data
+    // In a real app, fetch the matched user profiles here. mock data for now.
     const loadMatchDetails = async () => {
       const mockProfiles: UserProfile[] = [
         {
