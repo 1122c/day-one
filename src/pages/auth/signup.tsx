@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import Layout from '@/components/Layout';
 import Link from 'next/link';
+import { signUpUser, getAuthErrorMessage } from '@/services/authService';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -22,16 +21,47 @@ export default function SignUp() {
       return;
     }
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Create the Firebase auth account
-      await createUserWithEmailAndPassword(auth, email, password);
+      console.log('🚀 Starting user registration...');
+      
+      // Create user account with profile
+      const { user, profile } = await signUpUser({
+        email,
+        password,
+        name: email.split('@')[0], // Use email prefix as initial name
+        profileData: {
+          email,
+          name: email.split('@')[0],
+          privacy: {
+            profileVisibility: 'public',
+            showEmail: true,
+            showSocialProfiles: true,
+            allowMessaging: true,
+            messageSource: 'anyone',
+            showOnlineStatus: true,
+            showReadReceipts: true,
+            showTypingIndicators: true,
+            allowProfileViews: true
+          }
+        }
+      });
+      
+      console.log('✅ User registration successful:', user.uid);
+      console.log('👤 Profile created:', profile.name);
       
       // Redirect to onboarding to complete profile setup
       router.push('/onboarding');
-    } catch (err) {
-      setError('Failed to create account. Please try again.');
+    } catch (err: any) {
+      console.error('❌ User registration failed:', err);
+      const errorMessage = getAuthErrorMessage(err);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

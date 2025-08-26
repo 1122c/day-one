@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import Layout from '@/components/Layout';
 import Link from 'next/link';
+import { signInUser, getAuthErrorMessage } from '@/services/authService';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -18,10 +17,17 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/');
-    } catch (err) {
-      setError('Invalid email or password');
+      console.log('🔐 Attempting sign in...');
+      const { user, profile } = await signInUser({ email, password });
+      console.log('✅ Sign in successful:', user.uid);
+      console.log('👤 User profile loaded:', profile.name);
+      
+      // Redirect to dashboard or home
+      router.push('/discover');
+    } catch (err: any) {
+      console.error('❌ Sign in failed:', err);
+      const errorMessage = getAuthErrorMessage(err);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

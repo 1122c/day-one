@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/router';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
 import Layout from '@/components/Layout';
 import ProfileDiscovery from '@/components/discovery/ProfileDiscovery';
 import MatchDashboard from '@/components/matches/MatchDashboard';
 import { UserProfile, Match } from '@/types/user';
 import { FiUsers, FiSearch, FiHeart, FiMessageSquare, FiZap, FiUserMinus, FiFlag } from 'react-icons/fi';
 import { useChat } from '@/contexts/ChatContext';
+import { getUserProfile, getPotentialMatches, getMatchesForUser, createMatch } from '@/services/firebaseService';
 
 export default function DiscoverPage() {
   const [user, loading] = useAuthState(auth);
@@ -29,46 +29,14 @@ export default function DiscoverPage() {
       }
 
       try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const profileData = userDoc.data();
-          // Ensure the profile has all required fields with defaults
-          const profile: UserProfile = {
-            id: user.uid,
-            email: profileData.email || user.email || '',
-            name: profileData.name || 'User',
-            bio: profileData.bio || '',
-            age: profileData.age || '',
-            location: profileData.location || '',
-            occupation: profileData.occupation || '',
-            education: profileData.education || '',
-            interests: profileData.interests || [],
-            socialProfiles: profileData.socialProfiles || [],
-            values: {
-              coreValues: profileData.values?.coreValues || [],
-              personalGoals: profileData.values?.personalGoals || [],
-              preferredCommunication: profileData.values?.preferredCommunication || [],
-              availability: profileData.values?.availability || {
-                timezone: 'UTC',
-                preferredTimes: ['Morning', 'Afternoon', 'Evening'],
-              },
-            },
-            createdAt: profileData.createdAt || new Date(),
-            updatedAt: profileData.updatedAt || new Date(),
-            privacy: profileData.privacy || {
-              profileVisibility: 'public',
-              showEmail: false,
-              showSocialProfiles: true,
-              allowMessaging: true,
-              messageSource: 'anyone',
-              showOnlineStatus: true,
-              showReadReceipts: true,
-              showTypingIndicators: true,
-              allowProfileViews: true,
-            },
-          };
+        console.log('👤 Loading user profile for:', user.uid);
+        const profile = await getUserProfile(user.uid);
+        
+        if (profile) {
+          console.log('✅ User profile loaded:', profile.name);
           setUserProfile(profile);
         } else {
+          console.log('⚠️ No profile found, using default');
           // Create a default profile if none exists
           const defaultProfile: UserProfile = {
             id: user.uid,
@@ -110,51 +78,23 @@ export default function DiscoverPage() {
     loadUserProfile();
   }, [user]);
 
-  // Mock matches data - in a real app, this would come from Firebase
+  // Load real matches from Firebase
   useEffect(() => {
     if (userProfile) {
-      const mockMatches: Match[] = [
-        {
-          id: 'match-1',
-          userIds: [userProfile.id, 'user-2'],
-          matchScore: 92,
-          compatibilityFactors: {
-            valuesAlignment: 95,
-            goalsAlignment: 88,
-            communicationStyle: 90,
-          },
-          matchReason: 'Strong alignment on core values and communication preferences',
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-          status: 'accepted',
-        },
-        {
-          id: 'match-2',
-          userIds: [userProfile.id, 'user-3'],
-          matchScore: 87,
-          compatibilityFactors: {
-            valuesAlignment: 85,
-            goalsAlignment: 90,
-            communicationStyle: 88,
-          },
-          matchReason: 'Great synergy in personal goals and shared interests',
-          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-          status: 'accepted',
-        },
-        {
-          id: 'match-3',
-          userIds: [userProfile.id, 'user-4'],
-          matchScore: 78,
-          compatibilityFactors: {
-            valuesAlignment: 75,
-            goalsAlignment: 80,
-            communicationStyle: 79,
-          },
-          matchReason: 'Good potential for growth and learning together',
-          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-          status: 'pending',
-        },
-      ];
-      setMatches(mockMatches);
+      const loadMatches = async () => {
+        try {
+          console.log('🔍 Loading matches for user:', userProfile.id);
+          const userMatches = await getMatchesForUser(userProfile.id);
+          console.log('✅ Matches loaded:', userMatches.length);
+          setMatches(userMatches);
+        } catch (error) {
+          console.error('❌ Error loading matches:', error);
+          // Fallback to empty matches
+          setMatches([]);
+        }
+      };
+
+      loadMatches();
     }
   }, [userProfile]);
 
@@ -357,6 +297,8 @@ export default function DiscoverPage() {
             onAcceptMatch={handleAcceptMatch}
             onRejectMatch={handleRejectMatch}
             onStartConversation={handleStartMatchConversation}
+            onUnfollowProfile={handleUnfollowProfile}
+            onReportProfile={handleReportProfile}
           />
         )}
 

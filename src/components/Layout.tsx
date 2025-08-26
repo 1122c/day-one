@@ -4,6 +4,8 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/router';
 import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings, FiMessageSquare, FiBell, FiChevronDown, FiChevronUp, FiHeart as FiMatch, FiEye, FiX } from 'react-icons/fi';
+import { subscribeToNotifications, markNotificationAsRead } from '@/services/firebaseService';
+import { signOutUser } from '@/services/authService';
 
 interface Notification {
   id: string;
@@ -43,52 +45,22 @@ export default function Layout({ children }: LayoutProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Generate mock notifications when user is available
+  // Subscribe to real-time notifications when user is available
   useEffect(() => {
     if (user) {
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          type: 'message',
-          title: 'New Message from Sarah',
-          message: 'Sarah sent you a message about your shared interest in technology.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-          read: false,
-          actionUrl: '/messages',
-          actionData: { conversationId: 'conv-1' }
-        },
-        {
-          id: '2',
-          type: 'match',
-          title: 'New Match: Alex Chen',
-          message: 'You have a new match with Alex Chen based on shared values.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-          read: false,
-          actionUrl: '/matches',
-          actionData: { matchId: 'match-1' }
-        },
-        {
-          id: '3',
-          type: 'connection',
-          title: 'Connection Request Accepted',
-          message: 'John Doe accepted your connection request.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-          read: true,
-          actionUrl: '/connections',
-          actionData: { connectionId: 'conn-1' }
-        },
-        {
-          id: '4',
-          type: 'profile_view',
-          title: 'Profile Viewed',
-          message: 'Someone viewed your profile recently.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
-          read: true,
-          actionUrl: '/discover',
-          actionData: { viewerId: 'viewer-1' }
-        }
-      ];
-      setNotifications(mockNotifications);
+      console.log('🔔 Setting up real-time notifications for user:', user.uid);
+      
+      // Subscribe to real-time notifications
+      const unsubscribe = subscribeToNotifications(user.uid, (realNotifications) => {
+        console.log('📱 Received notifications:', realNotifications);
+        setNotifications(realNotifications);
+      });
+
+      // Cleanup subscription on unmount
+      return () => {
+        console.log('🧹 Cleaning up notifications subscription');
+        unsubscribe();
+      };
     }
   }, [user]);
 
@@ -130,18 +102,29 @@ export default function Layout({ children }: LayoutProps) {
     return timestamp.toLocaleDateString();
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
-    setNotifications(prev => 
-      prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-    );
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      // Mark as read in Firebase
+      await markNotificationAsRead(notification.id);
+      
+      // Update local state
+      setNotifications(prev => 
+        prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+      );
 
-    // Close dropdown
-    setNotificationsDropdownOpen(false);
+      // Close dropdown
+      setNotificationsDropdownOpen(false);
 
-    // Navigate to appropriate page
-    if (notification.actionUrl) {
-      router.push(notification.actionUrl);
+      // Navigate to appropriate page
+      if (notification.actionUrl) {
+        router.push(notification.actionUrl);
+      }
+    } catch (error) {
+      console.error('❌ Error marking notification as read:', error);
+      // Still navigate even if marking as read fails
+      if (notification.actionUrl) {
+        router.push(notification.actionUrl);
+      }
     }
   };
 
@@ -324,9 +307,16 @@ export default function Layout({ children }: LayoutProps) {
                           Settings
                         </Link>
                         <button
-                          onClick={() => {
-                            auth.signOut();
-                            setSettingsDropdownOpen(false);
+                          onClick={async () => {
+                            try {
+                              await signOutUser();
+                              setSettingsDropdownOpen(false);
+                            } catch (error) {
+                              console.error('❌ Error signing out:', error);
+                              // Fallback to direct sign out
+                              auth.signOut();
+                              setSettingsDropdownOpen(false);
+                            }
                           }}
                           className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-700"
                         >
