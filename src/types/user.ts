@@ -59,7 +59,7 @@ export interface Match {
   status: 'pending' | 'accepted' | 'rejected';
 }
 
-export type Connection = {
+export interface Connection {
   id: string;
   userIds: string[];
   status: 'pending' | 'active' | 'inactive';
@@ -67,4 +67,16 @@ export type Connection = {
   sharedInterests: string[];
   growthAreas: string[];
   notes: string[];
-}; 
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: 'message' | 'match' | 'connection' | 'profile_view' | 'system';
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  actionUrl?: string;
+  actionData?: any;
+} 
