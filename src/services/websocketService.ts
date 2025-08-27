@@ -1,4 +1,4 @@
-import { Message } from '@/types/chat';
+import { Message } from './chatService';
 
 export interface WebSocketMessage {
   type: 'message' | 'typing' | 'read' | 'online' | 'offline' | 'match' | 'profile_view' | 'connection_request' | 'system';
@@ -8,7 +8,7 @@ export interface WebSocketMessage {
 
 export interface TypingIndicator {
   userId: string;
-  matchId: string;
+  conversationId: string;
   isTyping: boolean;
 }
 

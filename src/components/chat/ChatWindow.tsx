@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { Match } from '@/types/user';
-import { Message } from '@/types/chat';
-import { sendMessage, getMessages, markMessageAsRead } from '@/services/chatService';
+import { sendMessage, getMessagesForConversation, markMessageAsRead, getOrCreateConversation, Message } from '@/services/chatService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSend, FiX } from 'react-icons/fi';
 import { Timestamp } from 'firebase/firestore';
@@ -30,12 +29,22 @@ export default function ChatWindow({ match, onClose }: ChatWindowProps) {
 
   const loadMessages = async () => {
     try {
-      const loadedMessages = await getMessages(match.id);
+      if (!user) return;
+      
+      // Get the other user's ID from the match
+      const otherUserId = match.userIds.find(id => id !== user.uid);
+      if (!otherUserId) {
+        throw new Error('Could not find other user in match');
+      }
+      
+      // Get or create conversation between the two users
+      const conversationId = await getOrCreateConversation(user.uid, otherUserId);
+      const loadedMessages = await getMessagesForConversation(conversationId);
       setMessages(loadedMessages);
       
       // Mark unread messages as read
       loadedMessages
-        .filter(msg => msg.status === 'sent' && msg.senderId !== user?.uid)
+        .filter(msg => !msg.read && msg.senderId !== user.uid)
         .forEach(msg => markMessageAsRead(msg.id!));
     } catch (err) {
       console.error('Error loading messages:', err);
@@ -50,14 +59,33 @@ export default function ChatWindow({ match, onClose }: ChatWindowProps) {
     if (!user || !newMessage.trim()) return;
 
     try {
-      const message = await sendMessage({
-        matchId: match.id,
+      // Get the other user's ID from the match
+      const otherUserId = match.userIds.find(id => id !== user.uid);
+      if (!otherUserId) {
+        throw new Error('Could not find other user in match');
+      }
+      
+      // Get or create conversation between the two users
+      const conversationId = await getOrCreateConversation(user.uid, otherUserId);
+      const messageId = await sendMessage(
+        conversationId,
+        user.uid,
+        newMessage.trim(),
+        'text'
+      );
+      
+      // Add the new message to the local state
+      const newMessageObj: Message = {
+        id: messageId,
+        conversationId,
         senderId: user.uid,
         content: newMessage.trim(),
-        status: 'sent',
-      });
+        timestamp: new Date(),
+        read: false,
+        messageType: 'text'
+      };
       
-      setMessages(prev => [...prev, message]);
+      setMessages(prev => [...prev, newMessageObj]);
       setNewMessage('');
     } catch (err) {
       console.error('Error sending message:', err);
@@ -125,9 +153,9 @@ export default function ChatWindow({ match, onClose }: ChatWindowProps) {
                 >
                   <p className="text-sm">{message.content}</p>
                   <p className="text-xs mt-1 opacity-75">
-                    {message.createdAt instanceof Timestamp
-                      ? message.createdAt.toDate().toLocaleTimeString()
-                      : new Date(message.createdAt).toLocaleTimeString()}
+                    {message.timestamp instanceof Timestamp
+                      ? message.timestamp.toDate().toLocaleTimeString()
+                      : new Date(message.timestamp).toLocaleTimeString()}
                   </p>
                 </div>
               </motion.div>

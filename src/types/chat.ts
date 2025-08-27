@@ -1,35 +1,41 @@
 export interface Message {
   id?: string;
-  matchId: string;
+  conversationId: string;
   senderId: string;
   content: string;
-  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
-  createdAt: Date | any;
-  updatedAt?: Date;
+  timestamp: Date | any;
+  read: boolean;
   messageType?: 'text' | 'image' | 'file' | 'system';
   metadata?: {
     fileName?: string;
     fileSize?: number;
-    fileType?: string;
+    fileUrl?: string;
     imageUrl?: string;
+    imageCaption?: string;
   };
 }
 
 export interface Conversation {
   id: string;
-  matchId: string;
-  participants: string[];
+  participantIds: string[];
   lastMessage?: Message;
-  unreadCount: number;
+  lastMessageTime?: Date;
+  unreadCount: { [userId: string]: number };
+  status: 'active' | 'archived' | 'blocked';
   createdAt: Date;
   updatedAt: Date;
-  isActive: boolean;
+  metadata?: {
+    title?: string;
+    isGroup?: boolean;
+    groupName?: string;
+    groupAvatar?: string;
+  };
 }
 
 export interface ChatNotification {
   id: string;
   type: 'new_message' | 'typing' | 'read_receipt' | 'online_status';
-  matchId: string;
+  conversationId: string;
   senderId: string;
   data: any;
   timestamp: Date;
@@ -37,7 +43,7 @@ export interface ChatNotification {
 }
 
 export interface TypingIndicator {
-  matchId: string;
+  conversationId: string;
   userId: string;
   isTyping: boolean;
   timestamp: Date;

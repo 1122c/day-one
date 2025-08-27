@@ -3,7 +3,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { updateEmail } from 'firebase/auth';
 import { UserProfile } from '@/types/user';
-import { saveUserProfile } from '@/services/firebaseService';
+import { updateUserProfile } from '@/services/firebaseService';
 
 interface PrivacySettingsProps {
   profile: UserProfile;
@@ -50,7 +50,7 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
         },
       };
 
-      await saveUserProfile(user.uid, updatedProfile);
+      await updateUserProfile(user.uid, updatedProfile);
       onUpdate(updatedProfile);
       setSuccess(true);
     } catch (err) {
@@ -91,7 +91,7 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
         email: newEmail.trim(),
       };
 
-      await saveUserProfile(user.uid, updatedProfile);
+      await updateUserProfile(user.uid, updatedProfile);
       onUpdate(updatedProfile);
       setSuccessMessage('Email address updated successfully');
       setSuccess(true);
@@ -132,7 +132,7 @@ export default function PrivacySettings({ profile, onUpdate }: PrivacySettingsPr
         deactivatedAt: new Date(),
       };
 
-      await saveUserProfile(user.uid, updatedProfile);
+      await updateUserProfile(user.uid, updatedProfile);
       onUpdate(updatedProfile);
       
       // Sign out the user

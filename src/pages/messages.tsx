@@ -62,6 +62,7 @@ export default function MessagesPage() {
             showEmail: false,
             showSocialProfiles: true,
             allowMessaging: true,
+            messageSource: 'anyone',
             showOnlineStatus: true,
             showReadReceipts: true,
             showTypingIndicators: true,

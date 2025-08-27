@@ -8,7 +8,7 @@ import { generateBioSuggestion, generateProfileCompletionSuggestions, generateVa
 import { FiLinkedin, FiTwitter, FiInstagram, FiMusic, FiX, FiEye, FiHeart, FiCheck, FiMapPin, FiCalendar, FiTarget, FiUsers, FiBookOpen, FiGlobe } from 'react-icons/fi';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
-import { saveUserProfile } from '@/services/firebaseService';
+import { updateUserProfile } from '@/services/firebaseService';
 import { useRouter } from 'next/router';
 import ProfileReview from './ProfileReview';
 
@@ -332,7 +332,7 @@ export default function OnboardingFlow() {
         updatedAt: new Date(),
       };
 
-      await saveUserProfile(user.uid, userProfile);
+              await updateUserProfile(user.uid, userProfile);
       setSubmitSuccess(true);
       
       // Redirect to home page after a short delay

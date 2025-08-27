@@ -57,7 +57,9 @@ export async function signUpUser(signUpData: SignUpData): Promise<{ user: Fireba
     const profileData: Partial<UserProfile> = {
       email: signUpData.email,
       name: signUpData.name,
-      ...signUpData.profileData
+      ...(signUpData.profileData ? Object.fromEntries(
+        Object.entries(signUpData.profileData).filter(([_, value]) => value !== undefined)
+      ) : {})
     };
 
     await createUserProfile(user.uid, profileData);
@@ -133,9 +135,36 @@ export async function signInUser(signInData: SignInData): Promise<{ user: Fireba
     console.log('✅ User signed in successfully:', user.uid);
 
     // Fetch user profile from Firestore
-    const profile = await getUserProfile(user.uid);
+    let profile = await getUserProfile(user.uid);
+    
+    // If profile doesn't exist, create a basic one
     if (!profile) {
-      throw new Error('User profile not found. Please contact support.');
+      console.log('⚠️ User profile not found, creating basic profile...');
+      
+      const basicProfileData: Partial<UserProfile> = {
+        email: user.email || signInData.email,
+        name: user.displayName || signInData.email.split('@')[0],
+        privacy: {
+          profileVisibility: 'public',
+          showEmail: true,
+          showSocialProfiles: true,
+          allowMessaging: true,
+          messageSource: 'anyone',
+          showOnlineStatus: true,
+          showReadReceipts: true,
+          showTypingIndicators: true,
+          allowProfileViews: true
+        }
+      };
+      
+      await createUserProfile(user.uid, basicProfileData);
+      profile = await getUserProfile(user.uid);
+      
+      if (!profile) {
+        throw new Error('Failed to create user profile. Please contact support.');
+      }
+      
+      console.log('✅ Basic user profile created successfully');
     }
 
     console.log('✅ User profile retrieved');

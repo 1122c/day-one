@@ -77,8 +77,13 @@ export async function createUserProfile(
       }
     };
 
+    // Filter out undefined values before sending to Firebase
+    const cleanProfile = Object.fromEntries(
+      Object.entries(userProfile).filter(([_, value]) => value !== undefined)
+    );
+
     await setDoc(userRef, {
-      ...userProfile,
+      ...cleanProfile,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -263,8 +268,7 @@ export async function getConnectionsForUser(userId: string): Promise<Connection[
     const q = query(
       connectionsRef,
       where('userIds', 'array-contains', userId),
-      where('status', '==', 'active'),
-      orderBy('lastInteraction', 'desc')
+      where('status', '==', 'active')
     );
 
     const querySnapshot = await getDocs(q);
@@ -649,8 +653,7 @@ export async function getConnectionRequests(userId: string): Promise<ConnectionR
     const q = query(
       requestsRef,
       where('toUserId', '==', userId),
-      where('status', '==', 'pending'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'pending')
     );
 
     const querySnapshot = await getDocs(q);
@@ -685,8 +688,7 @@ export async function getSentConnectionRequests(userId: string): Promise<Connect
     const q = query(
       requestsRef,
       where('fromUserId', '==', userId),
-      where('status', '==', 'pending'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'pending')
     );
 
     const querySnapshot = await getDocs(q);
@@ -719,8 +721,8 @@ async function getExistingConnectionRequest(user1Id: string, user2Id: string): P
     const requestsRef = collection(db, 'connectionRequests');
     const q = query(
       requestsRef,
-      where('fromUserId', 'in', [user1Id, user2Id]),
-      where('toUserId', 'in', [user1Id, user2Id]),
+      where('fromUserId', '==', user1Id),
+      where('toUserId', '==', user2Id),
       where('status', 'in', ['pending', 'accepted'])
     );
 
@@ -889,7 +891,7 @@ export function subscribeToUserProfile(
         id: doc.id,
         email: data.email || '',
         name: data.name || 'User',
-        profilePicture: data.profilePicture,
+        profilePicture: data.profilePicture || null,
         bio: data.bio,
         age: data.age,
         location: data.location,
@@ -1055,7 +1057,7 @@ export async function searchUsers(
           id: doc.id,
           email: data.email || '',
           name: data.name || 'User',
-          profilePicture: data.profilePicture,
+          profilePicture: data.profilePicture || null,
           bio: data.bio,
           age: data.age,
           location: data.location,
@@ -1122,7 +1124,7 @@ export async function getPotentialMatches(
           id: doc.id,
           email: data.email || '',
           name: data.name || 'User',
-          profilePicture: data.profilePicture,
+          profilePicture: data.profilePicture || null,
           bio: data.bio,
           age: data.age,
           location: data.location,

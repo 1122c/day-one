@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { Match } from '@/types/user';
-import { Message, TypingIndicator, OnlineStatus } from '@/types/chat';
-import { sendMessage, getMessages, markMessageAsRead } from '@/services/chatService';
+import { TypingIndicator, OnlineStatus } from '@/types/chat';
+import { sendMessage, getMessagesForConversation, markMessageAsRead, getOrCreateConversation, Message } from '@/services/chatService';
 import { websocketService, pollingService, WebSocketMessage } from '@/services/websocketService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSend, FiX, FiPaperclip, FiSmile, FiWifi, FiWifiOff } from 'react-icons/fi';
@@ -95,7 +95,7 @@ export default function RealTimeChat({ match, onClose }: RealTimeChatProps) {
         setMessages(prev => 
           prev.map(msg => 
             readData.messageIds.includes(msg.id) 
-              ? { ...msg, status: 'read' as const }
+              ? { ...msg, read: true }
               : msg
           )
         );
@@ -127,12 +127,12 @@ export default function RealTimeChat({ match, onClose }: RealTimeChatProps) {
 
   const loadMessages = async () => {
     try {
-      const loadedMessages = await getMessages(match.id);
+      const loadedMessages = await getMessagesForConversation(match.id);
       setMessages(loadedMessages);
       
       // Mark unread messages as read
       loadedMessages
-        .filter(msg => msg.status === 'sent' && msg.senderId !== user?.uid)
+        .filter(msg => !msg.read && msg.senderId !== user?.uid)
         .forEach(msg => {
           if (msg.id) {
             markMessageAsRead(msg.id);
@@ -162,18 +162,36 @@ export default function RealTimeChat({ match, onClose }: RealTimeChatProps) {
     websocketService.sendTypingIndicator(match.id, user.uid, false);
 
     try {
-      const message = await sendMessage({
-        matchId: match.id,
+      // Get or create conversation between the two users
+      const otherUserId = match.userIds.find(id => id !== user.uid);
+      if (!otherUserId) {
+        throw new Error('Could not find other user in match');
+      }
+      
+      const conversationId = await getOrCreateConversation(user.uid, otherUserId);
+      const messageId = await sendMessage(
+        conversationId,
+        user.uid,
+        messageContent,
+        'text'
+      );
+      
+      // Create message object for local state
+      const newMessage: Message = {
+        id: messageId,
+        conversationId,
         senderId: user.uid,
         content: messageContent,
-        status: 'sent',
-      });
+        timestamp: new Date(),
+        read: false,
+        messageType: 'text'
+      };
       
       // Add message to local state
-      setMessages(prev => [...prev, message]);
+      setMessages(prev => [...prev, newMessage]);
       
       // Send via WebSocket for real-time delivery
-      websocketService.sendChatMessage(message);
+      websocketService.sendChatMessage(newMessage);
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message');
@@ -216,16 +234,17 @@ export default function RealTimeChat({ match, onClose }: RealTimeChatProps) {
       console.log('File upload:', file.name);
       // For now, just add a placeholder message
       const message: Message = {
-        matchId: match.id,
+        id: `temp-${Date.now()}`,
+        conversationId: 'temp',
         senderId: user.uid,
         content: `📎 ${file.name}`,
-        status: 'sent',
-        createdAt: new Date(),
+        timestamp: new Date(),
+        read: false,
         messageType: 'file',
         metadata: {
           fileName: file.name,
           fileSize: file.size,
-          fileType: file.type,
+          fileUrl: '',
         },
       };
       setMessages(prev => [...prev, message]);
@@ -334,11 +353,11 @@ export default function RealTimeChat({ match, onClose }: RealTimeChatProps) {
                   )}
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-xs opacity-75">
-                      {formatTime(message.createdAt)}
+                      {formatTime(message.timestamp)}
                     </p>
                     {message.senderId === user?.uid && (
                       <div className="ml-2">
-                        {getMessageStatusIcon(message.status)}
+                        {getMessageStatusIcon(message.read ? 'read' : 'sent')}
                       </div>
                     )}
                   </div>
