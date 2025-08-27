@@ -166,6 +166,31 @@ service cloud.firestore {
     }
     
     // ============================================================================
+    // CONNECTION REQUESTS
+    // ============================================================================
+    match /connectionRequests/{requestId} {
+      // Users can read connection requests they're involved in
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.fromUserId || 
+         request.auth.uid == resource.data.toUserId);
+      
+      // Users can create connection requests to other users
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.fromUserId &&
+        request.resource.data.fromUserId != request.resource.data.toUserId &&
+        request.resource.data.status == 'pending';
+      
+      // Recipients can update (accept/reject) connection requests
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.toUserId &&
+        request.resource.data.status in ['accepted', 'rejected'];
+      
+      // Users can delete their own outgoing requests
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.fromUserId;
+    }
+    
+    // ============================================================================
     // ANALYTICS (Read-only for authenticated users)
     // ============================================================================
     match /analytics/{document=**} {
