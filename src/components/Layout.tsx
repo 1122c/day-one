@@ -4,12 +4,12 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/router';
 import { FiHome, FiSearch, FiHeart, FiUsers, FiSettings, FiMessageSquare, FiBell, FiChevronDown, FiChevronUp, FiHeart as FiMatch, FiEye, FiX } from 'react-icons/fi';
-import { subscribeToNotifications, markNotificationAsRead } from '@/services/firebaseService';
+import { subscribeToNotifications, markNotificationAsRead, getConnectionRequests } from '@/services/firebaseService';
 import { signOutUser } from '@/services/authService';
 
 interface Notification {
   id: string;
-  type: 'message' | 'match' | 'connection' | 'profile_view' | 'system';
+  type: 'message' | 'match' | 'connection' | 'profile_view' | 'system' | 'connection_request' | 'connection_accepted' | 'connection_rejected';
   title: string;
   message: string;
   timestamp: Date;
@@ -27,6 +27,7 @@ export default function Layout({ children }: LayoutProps) {
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
   const [notificationsDropdownOpen, setNotificationsDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [connectionRequestCount, setConnectionRequestCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -56,6 +57,18 @@ export default function Layout({ children }: LayoutProps) {
         setNotifications(realNotifications);
       });
 
+      // Get connection request count
+      const getConnectionRequestCount = async () => {
+        try {
+          const requests = await getConnectionRequests(user.uid);
+          setConnectionRequestCount(requests.length);
+        } catch (error) {
+          console.error('Error getting connection request count:', error);
+        }
+      };
+
+      getConnectionRequestCount();
+
       // Cleanup subscription on unmount
       return () => {
         console.log('🧹 Cleaning up notifications subscription');
@@ -68,7 +81,12 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Home', href: '/', icon: FiHome },
     { name: 'Discover', href: '/discover', icon: FiSearch },
     { name: 'Suggested Users', href: '/matches', icon: FiHeart },
-    { name: 'Connections', href: '/connections', icon: FiUsers },
+    { 
+      name: 'Connections', 
+      href: '/connections', 
+      icon: FiUsers,
+      badge: connectionRequestCount > 0 ? connectionRequestCount : undefined
+    },
   ];
 
   const getNotificationIcon = (type: Notification['type']) => {
@@ -156,6 +174,11 @@ export default function Layout({ children }: LayoutProps) {
                     >
                       <Icon className="h-5 w-5 mr-1" />
                       {item.name}
+                      {item.badge && (
+                        <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

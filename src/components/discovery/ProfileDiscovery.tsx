@@ -11,6 +11,7 @@ interface ProfileDiscoveryProps {
   onUnfollowProfile: (profile: UserProfile) => void;
   onReportProfile: (profile: UserProfile) => void;
   onBlockUser: (profile: UserProfile) => void;
+  onSendConnectionRequest: (profile: UserProfile, message?: string) => void;
 }
 
 interface FilterOptions {
@@ -29,6 +30,7 @@ export default function ProfileDiscovery({
   onUnfollowProfile,
   onReportProfile,
   onBlockUser,
+  onSendConnectionRequest,
 }: ProfileDiscoveryProps) {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<UserProfile[]>([]);
@@ -463,6 +465,18 @@ export default function ProfileDiscovery({
                   
                   {/* Secondary Action Buttons */}
                   <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        const message = prompt('Add a personal message (optional):');
+                        if (message !== null) { // User didn't cancel
+                          onSendConnectionRequest(profile, message);
+                        }
+                      }}
+                      className="flex-1 bg-green-50 text-green-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-green-100 transition-colors duration-200 border border-green-200"
+                    >
+                      <FiUser className="inline h-3 w-3 mr-1" />
+                      Connect
+                    </button>
                     <button
                       onClick={() => onUnfollowProfile(profile)}
                       className="flex-1 bg-red-50 text-red-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-red-100 transition-colors duration-200 border border-red-200"

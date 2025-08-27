@@ -476,6 +476,306 @@ async function archiveConversationsBetweenUsers(user1Id: string, user2Id: string
 }
 
 // ============================================================================
+// CONNECTION REQUESTS SYSTEM
+// ============================================================================
+
+export interface ConnectionRequest {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'ignored';
+  message?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export async function sendConnectionRequest(
+  fromUserId: string,
+  toUserId: string,
+  message?: string
+): Promise<string> {
+  try {
+    console.log('📤 Sending connection request from', fromUserId, 'to', toUserId);
+    
+    // Check if request already exists
+    const existingRequest = await getExistingConnectionRequest(fromUserId, toUserId);
+    if (existingRequest) {
+      throw new Error('Connection request already exists');
+    }
+    
+    // Check if users are already connected
+    const existingConnection = await getExistingConnection(fromUserId, toUserId);
+    if (existingConnection) {
+      throw new Error('Users are already connected');
+    }
+    
+    const requestData = {
+      fromUserId,
+      toUserId,
+      status: 'pending' as const,
+      message: message || '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    const requestRef = await addDoc(collection(db, 'connectionRequests'), requestData);
+    
+    // Create notification for recipient
+    await createNotification(toUserId, {
+      userId: toUserId,
+      type: 'connection_request',
+      title: 'New Connection Request',
+      message: `You have a new connection request from ${fromUserId}`,
+      actionUrl: '/connections/requests'
+    });
+
+    console.log('✅ Connection request sent successfully');
+    return requestRef.id;
+  } catch (error) {
+    console.error('❌ Error sending connection request:', error);
+    throw new Error('Failed to send connection request');
+  }
+}
+
+export async function acceptConnectionRequest(requestId: string): Promise<void> {
+  try {
+    console.log('✅ Accepting connection request:', requestId);
+    
+    const requestRef = doc(db, 'connectionRequests', requestId);
+    const requestSnap = await getDoc(requestRef);
+    
+    if (!requestSnap.exists()) {
+      throw new Error('Connection request not found');
+    }
+    
+    const requestData = requestSnap.data() as ConnectionRequest;
+    
+    // Update request status
+    await updateDoc(requestRef, {
+      status: 'accepted',
+      updatedAt: serverTimestamp()
+    });
+    
+    // Create connection between users
+    await createConnection(requestData.fromUserId, requestData.toUserId);
+    
+    // Create notifications
+    await createNotification(requestData.fromUserId, {
+      userId: requestData.fromUserId,
+      type: 'connection_accepted',
+      title: 'Connection Accepted',
+      message: `Your connection request to ${requestData.toUserId} was accepted!`,
+      actionUrl: '/connections'
+    });
+    
+    console.log('✅ Connection request accepted successfully');
+  } catch (error) {
+    console.error('❌ Error accepting connection request:', error);
+    throw new Error('Failed to accept connection request');
+  }
+}
+
+export async function rejectConnectionRequest(requestId: string): Promise<void> {
+  try {
+    console.log('❌ Rejecting connection request:', requestId);
+    
+    const requestRef = doc(db, 'connectionRequests', requestId);
+    const requestSnap = await getDoc(requestRef);
+    
+    if (!requestSnap.exists()) {
+      throw new Error('Connection request not found');
+    }
+    
+    const requestData = requestSnap.data() as ConnectionRequest;
+    
+    // Update request status
+    await updateDoc(requestRef, {
+      status: 'rejected',
+      updatedAt: serverTimestamp()
+    });
+    
+    // Create notification for sender
+    await createNotification(requestData.fromUserId, {
+      userId: requestData.fromUserId,
+      type: 'connection_rejected',
+      title: 'Connection Request Rejected',
+      message: `Your connection request to ${requestData.toUserId} was rejected.`,
+      actionUrl: '/connections'
+    });
+    
+    console.log('✅ Connection request rejected successfully');
+  } catch (error) {
+    console.error('❌ Error rejecting connection request:', error);
+    throw new Error('Failed to reject connection request');
+  }
+}
+
+export async function cancelConnectionRequest(requestId: string): Promise<void> {
+  try {
+    console.log('🚫 Cancelling connection request:', requestId);
+    
+    const requestRef = doc(db, 'connectionRequests', requestId);
+    await deleteDoc(requestRef);
+    
+    console.log('✅ Connection request cancelled successfully');
+  } catch (error) {
+    console.error('❌ Error cancelling connection request:', error);
+    throw new Error('Failed to cancel connection request');
+  }
+}
+
+export async function ignoreConnectionRequest(requestId: string): Promise<void> {
+  try {
+    console.log('🤐 Ignoring connection request:', requestId);
+    
+    const requestRef = doc(db, 'connectionRequests', requestId);
+    await updateDoc(requestRef, {
+      status: 'ignored',
+      updatedAt: serverTimestamp()
+    });
+    
+    console.log('✅ Connection request ignored successfully');
+  } catch (error) {
+    console.error('❌ Error ignoring connection request:', error);
+    throw new Error('Failed to ignore connection request');
+  }
+}
+
+export async function getConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
+  try {
+    console.log('📋 Getting connection requests for user:', userId);
+    
+    const requestsRef = collection(db, 'connectionRequests');
+    const q = query(
+      requestsRef,
+      where('toUserId', '==', userId),
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const requests: ConnectionRequest[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      requests.push({
+        id: doc.id,
+        fromUserId: data.fromUserId,
+        toUserId: data.toUserId,
+        status: data.status,
+        message: data.message,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      });
+    });
+
+    console.log('✅ Retrieved connection requests:', requests.length);
+    return requests;
+  } catch (error) {
+    console.error('❌ Error getting connection requests:', error);
+    return [];
+  }
+}
+
+export async function getSentConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
+  try {
+    console.log('📤 Getting sent connection requests for user:', userId);
+    
+    const requestsRef = collection(db, 'connectionRequests');
+    const q = query(
+      requestsRef,
+      where('fromUserId', '==', userId),
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const requests: ConnectionRequest[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      requests.push({
+        id: doc.id,
+        fromUserId: data.fromUserId,
+        toUserId: data.toUserId,
+        status: data.status,
+        message: data.message,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      });
+    });
+
+    console.log('✅ Retrieved sent connection requests:', requests.length);
+    return requests;
+  } catch (error) {
+    console.error('❌ Error getting sent connection requests:', error);
+    return [];
+  }
+}
+
+// Helper function to check for existing connection request
+async function getExistingConnectionRequest(user1Id: string, user2Id: string): Promise<ConnectionRequest | null> {
+  try {
+    const requestsRef = collection(db, 'connectionRequests');
+    const q = query(
+      requestsRef,
+      where('fromUserId', 'in', [user1Id, user2Id]),
+      where('toUserId', 'in', [user1Id, user2Id]),
+      where('status', 'in', ['pending', 'accepted'])
+    );
+
+    const querySnapshot = await getDocs(q);
+    
+    for (const doc of querySnapshot.docs) {
+      const data = doc.data();
+      if ((data.fromUserId === user1Id && data.toUserId === user2Id) ||
+          (data.fromUserId === user2Id && data.toUserId === user1Id)) {
+        return {
+          id: doc.id,
+          fromUserId: data.fromUserId,
+          toUserId: data.toUserId,
+          status: data.status,
+          message: data.message,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ Error checking existing connection request:', error);
+    return null;
+  }
+}
+
+// Helper function to check for existing connection
+async function getExistingConnection(user1Id: string, user2Id: string): Promise<any> {
+  try {
+    const connectionsRef = collection(db, 'connections');
+    const q = query(
+      connectionsRef,
+      where('userIds', 'array-contains', user1Id),
+      where('status', '==', 'active')
+    );
+
+    const querySnapshot = await getDocs(q);
+    
+    for (const doc of querySnapshot.docs) {
+      const data = doc.data();
+      if (data.userIds.includes(user2Id)) {
+        return { id: doc.id, ...data };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ Error checking existing connection:', error);
+    return null;
+  }
+}
+
+// ============================================================================
 // NOTIFICATIONS SYSTEM
 // ============================================================================
 

@@ -8,7 +8,7 @@ import MatchDashboard from '@/components/matches/MatchDashboard';
 import { UserProfile, Match } from '@/types/user';
 import { FiUsers, FiSearch, FiHeart, FiMessageSquare, FiZap, FiUserMinus, FiFlag } from 'react-icons/fi';
 import { useChat } from '@/contexts/ChatContext';
-import { getUserProfile, getPotentialMatches, getMatchesForUser, createMatch, blockUser } from '@/services/firebaseService';
+import { getUserProfile, getPotentialMatches, getMatchesForUser, createMatch, blockUser, sendConnectionRequest } from '@/services/firebaseService';
 
 export default function DiscoverPage() {
   const [user, loading] = useAuthState(auth);
@@ -204,6 +204,24 @@ export default function DiscoverPage() {
     }
   };
 
+  const handleSendConnectionRequest = async (profile: UserProfile, message?: string) => {
+    try {
+      if (!userProfile) return;
+      
+      console.log('Sending connection request to:', profile.name);
+      await sendConnectionRequest(userProfile.id, profile.id, message);
+      
+      alert(`Connection request sent to ${profile.name}!`);
+    } catch (error) {
+      console.error('Error sending connection request:', error);
+      if (error instanceof Error) {
+        alert(`Failed to send connection request: ${error.message}`);
+      } else {
+        alert('Failed to send connection request. Please try again.');
+      }
+    }
+  };
+
   const handleAcceptMatch = (matchId: string) => {
     // In a real app, this would accept the match
     console.log('Accepted match:', matchId);
@@ -307,6 +325,7 @@ export default function DiscoverPage() {
             onUnfollowProfile={handleUnfollowProfile}
             onReportProfile={handleReportProfile}
             onBlockUser={handleBlockUser}
+            onSendConnectionRequest={handleSendConnectionRequest}
           />
         )}
 

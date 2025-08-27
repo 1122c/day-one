@@ -69,10 +69,20 @@ export interface Connection {
   notes: string[];
 }
 
+export interface ConnectionRequest {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'ignored';
+  message?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Notification {
   id: string;
   userId: string;
-  type: 'message' | 'match' | 'connection' | 'profile_view' | 'system';
+  type: 'message' | 'match' | 'connection' | 'profile_view' | 'system' | 'connection_request' | 'connection_accepted' | 'connection_rejected';
   title: string;
   message: string;
   timestamp: Date;
