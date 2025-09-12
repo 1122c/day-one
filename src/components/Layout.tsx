@@ -157,7 +157,7 @@ export default function Layout({ children }: LayoutProps) {
             {/* Logo & Nav */}
             <div className="flex items-center space-x-8">
               <Link href="/auth/signin" className="text-2xl font-extrabold text-indigo-600 tracking-tight flex items-center">
-                ConnectMind
+                WeNetwork
               </Link>
               <div className="hidden md:flex space-x-2">
                 {navigation.map((item) => {

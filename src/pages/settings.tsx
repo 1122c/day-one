@@ -28,7 +28,10 @@ export default function SettingsPage() {
     try {
       setLoadingProfile(true);
       const userProfile = await getUserProfile(user.uid);
+      console.log('🔍 Loaded user profile:', userProfile);
       if (userProfile) {
+        console.log('🔍 Profile values:', userProfile.values);
+        console.log('🔍 Profile coreValues:', userProfile.values?.coreValues);
         setProfile(userProfile);
       }
     } catch (error) {

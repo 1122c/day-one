@@ -113,7 +113,7 @@ export default function NotificationsPage() {
         {
           id: '5',
           type: 'system',
-          title: 'Welcome to ConnectMind!',
+          title: 'Welcome to WeNetwork!',
           message: 'Your profile has been successfully created. Start connecting with others!',
           timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
           read: true,

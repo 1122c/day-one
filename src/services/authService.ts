@@ -144,6 +144,17 @@ export async function signInUser(signInData: SignInData): Promise<{ user: Fireba
       const basicProfileData: Partial<UserProfile> = {
         email: user.email || signInData.email,
         name: user.displayName || signInData.email.split('@')[0],
+        values: {
+          coreValues: [],
+          personalGoals: [],
+          preferredCommunication: [],
+          availability: {
+            timezone: 'UTC',
+            preferredTimes: []
+          }
+        },
+        interests: [],
+        socialProfiles: [],
         privacy: {
           profileVisibility: 'public',
           showEmail: true,

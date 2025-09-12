@@ -935,7 +935,7 @@ export default function OnboardingFlow() {
   return (
     <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome to ConnectMind</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Welcome to WeNetwork</h1>
         <p className="mt-2 text-gray-600">
           Let's get to know you better to help create meaningful connections.
         </p>

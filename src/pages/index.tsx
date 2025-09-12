@@ -136,7 +136,7 @@ export default function Home() {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
               <div className="text-3xl font-extrabold text-indigo-600 tracking-tight">
-                ConnectMind
+                WeNetwork
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -166,7 +166,7 @@ export default function Home() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"> Purpose</span>
             </h1>
             <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Connect through what really matters—shared values, goals, and genuine interests. ConnectMind matches you with people aligned to your vision and provides smart conversation support to make it easy to build lasting connections.
+              Connect through what really matters—shared values, goals, and genuine interests. WeNetwork matches you with people aligned to your vision and provides smart conversation support to make it easy to build lasting connections.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -197,7 +197,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Why Choose ConnectMind?
+              Why Choose WeNetwork?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Our platform goes beyond surface-level connections to create meaningful relationships 
@@ -268,12 +268,12 @@ export default function Home() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="text-2xl font-bold text-indigo-400 mb-4">ConnectMind</div>
+            <div className="text-2xl font-bold text-indigo-400 mb-4">WeNetwork</div>
             <p className="text-gray-400 mb-6">
               Building meaningful connections, one match at a time.
             </p>
             <div className="text-sm text-gray-500">
-              © 2024 ConnectMind. All rights reserved.
+              © 2024 WeNetwork. All rights reserved.
             </div>
           </div>
         </div>

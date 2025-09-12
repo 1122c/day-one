@@ -103,10 +103,41 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     if (userSnap.exists()) {
       const data = userSnap.data();
       return {
-        ...data,
         id: userSnap.id,
+        email: data.email || '',
+        name: data.name || 'User',
+        profilePicture: data.profilePicture,
+        bio: data.bio,
+        age: data.age,
+        location: data.location,
+        occupation: data.occupation,
+        education: data.education,
+        interests: data.interests || [],
+        socialProfiles: data.socialProfiles || [],
+        values: data.values || {
+          coreValues: [],
+          personalGoals: [],
+          preferredCommunication: [],
+          availability: {
+            timezone: 'UTC',
+            preferredTimes: []
+          }
+        },
         createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        isDeactivated: data.isDeactivated || false,
+        deactivatedAt: data.deactivatedAt?.toDate(),
+        privacy: data.privacy || {
+          profileVisibility: 'public',
+          showEmail: true,
+          showSocialProfiles: true,
+          allowMessaging: true,
+          messageSource: 'anyone',
+          showOnlineStatus: true,
+          showReadReceipts: true,
+          showTypingIndicators: true,
+          allowProfileViews: true
+        }
       } as UserProfile;
     }
 

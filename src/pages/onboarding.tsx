@@ -31,7 +31,7 @@ export default function OnboardingPage() {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
               <div className="text-2xl font-extrabold text-indigo-600 tracking-tight">
-                ConnectMind
+                WeNetwork
               </div>
               <div className="ml-4 px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full">
                 Complete Your Profile
@@ -48,7 +48,7 @@ export default function OnboardingPage() {
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Welcome to ConnectMind!
+            Welcome to WeNetwork!
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Let's get to know you better so we can help you find meaningful connections. 
