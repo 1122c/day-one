@@ -83,8 +83,8 @@ export default function NotificationsPage() {
         {
           id: '2',
           type: 'match',
-          title: 'New Match: Alex Chen',
-          message: 'You have a new match with Alex Chen based on shared values.',
+          title: 'New Connection: Alex Chen',
+          message: 'You have a new connection with Alex Chen based on shared values.',
           timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
           read: false,
           actionUrl: '/matches',

@@ -118,16 +118,16 @@ export default function ChatWindow({ match, onClose }: ChatWindowProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full h-full sm:max-w-2xl sm:h-[600px] flex flex-col">
+      <div className="bg-white sm:rounded-lg w-full h-full sm:max-w-2xl sm:h-[600px] flex flex-col">
         {/* Header */}
         <div className="p-3 sm:p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-900">Chat</h3>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900">Chat</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 p-1"
             aria-label="Close chat"
           >
-            <FiX className="h-6 w-6" />
+            <FiX className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
@@ -175,13 +175,13 @@ export default function ChatWindow({ match, onClose }: ChatWindowProps) {
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              className="flex-1 min-h-[40px] max-h-[120px] p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+              className="flex-1 min-h-[40px] max-h-[120px] p-2 sm:p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
               disabled={loading}
             />
             <button
               type="submit"
               disabled={!newMessage.trim() || loading}
-              className="px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px]"
+              className="px-3 sm:px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px]"
             >
               Send
             </button>

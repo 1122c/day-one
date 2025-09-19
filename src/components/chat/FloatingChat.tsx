@@ -92,9 +92,9 @@ export default function FloatingChat({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-full h-full sm:w-[500px] sm:h-[700px] sm:bottom-4 sm:right-4 bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col">
+    <div className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 sm:w-[500px] sm:h-[700px] z-50 bg-white sm:rounded-lg shadow-2xl border border-gray-200 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-indigo-500 to-purple-600 text-white sm:rounded-t-lg">
         <div className="flex items-center space-x-2 sm:space-x-3">
           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
             <FiMessageSquare className="h-4 w-4" />
@@ -210,7 +210,7 @@ export default function FloatingChat({
       )}
 
       {/* Message Input */}
-      <div className="p-3 sm:p-4 border-t border-gray-200 bg-white rounded-b-lg">
+      <div className="p-3 sm:p-4 border-t border-gray-200 bg-white sm:rounded-b-lg">
         <div className="flex space-x-2">
           <textarea
             value={messageText}
