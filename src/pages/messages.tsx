@@ -184,23 +184,23 @@ export default function MessagesPage() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <FiMessageSquare className="h-8 w-8 text-indigo-600 mr-3" />
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 sm:mb-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <FiMessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 mr-2 sm:mr-3" />
                 Messages & Conversations
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-2">
                 Continue your conversations and build meaningful connections
               </p>
             </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => router.push('/discover')}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center text-sm"
               >
                 <FiUsers className="h-4 w-4 mr-2" />
                 Find New People

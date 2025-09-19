@@ -266,39 +266,39 @@ export default function ConnectionsPage() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="w-full space-y-4 sm:space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Your Connections</h1>
-          <p className="mt-2 text-gray-600">Manage your professional and personal connections</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Your Connections</h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600">Manage your professional and personal connections</p>
         </div>
 
         {/* Tab Navigation */}
         <div className="bg-white shadow rounded-lg">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
+            <nav className="-mb-px flex flex-wrap space-x-2 sm:space-x-8 px-4 sm:px-6">
               <button
                 onClick={() => setActiveTab('connections')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center whitespace-nowrap ${
                   activeTab === 'connections'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <FiUsers className="inline h-4 w-4 mr-2" />
+                <FiUsers className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
                 Connections
-                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                <span className="ml-1 sm:ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                   {mockConnections.length}
                 </span>
               </button>
               <button
                 onClick={() => setActiveTab('requests')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center whitespace-nowrap ${
                   activeTab === 'requests'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <FiClock className="inline h-4 w-4 mr-2" />
+                <FiClock className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
                 Requests
               </button>
             </nav>

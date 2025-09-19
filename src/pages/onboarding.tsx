@@ -45,12 +45,12 @@ export default function OnboardingPage() {
       </div>
 
       {/* Onboarding Content */}
-      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <div className="w-full py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
             Welcome to WeNetwork!
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
             Let's get to know you better so we can help you find meaningful connections. 
             This will only take a few minutes.
           </p>

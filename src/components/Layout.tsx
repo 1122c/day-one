@@ -26,10 +26,12 @@ export default function Layout({ children }: LayoutProps) {
   const [user, loading] = useAuthState(auth);
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
   const [notificationsDropdownOpen, setNotificationsDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [connectionRequestCount, setConnectionRequestCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,6 +41,9 @@ export default function Layout({ children }: LayoutProps) {
       }
       if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
         setNotificationsDropdownOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false);
       }
     }
 
@@ -185,20 +190,89 @@ export default function Layout({ children }: LayoutProps) {
               </div>
               
               {/* Mobile menu button */}
-              <div className="md:hidden">
+              <div className="md:hidden" ref={mobileMenuRef}>
                 <button
                   type="button"
                   className="p-2 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-                  onClick={() => {
-                    // TODO: Implement mobile menu toggle
-                    console.log('Mobile menu toggle');
-                  }}
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 >
                   <span className="sr-only">Open main menu</span>
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
+                  {mobileMenuOpen ? (
+                    <FiX className="h-6 w-6" />
+                  ) : (
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  )}
                 </button>
+                
+                {/* Mobile menu dropdown */}
+                {mobileMenuOpen && (
+                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                      <h3 className="text-sm font-semibold text-gray-900">Navigation</h3>
+                    </div>
+                    <div className="py-2">
+                      {navigation.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            className={`flex items-center px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+                              router.pathname === item.href
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-indigo-700'
+                            }`}
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Icon className="h-5 w-5 mr-3" />
+                            {item.name}
+                            {item.badge && (
+                              <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                                {item.badge}
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                      {user && (
+                        <>
+                          <div className="border-t border-gray-200 my-2"></div>
+                          <Link
+                            href="/messages"
+                            className="flex items-center px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <FiMessageSquare className="h-5 w-5 mr-3" />
+                            Messages
+                          </Link>
+                          <Link
+                            href="/notifications"
+                            className="flex items-center px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <FiBell className="h-5 w-5 mr-3" />
+                            Notifications
+                            {unreadCount > 0 && (
+                              <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                                {unreadCount}
+                              </span>
+                            )}
+                          </Link>
+                          <Link
+                            href="/settings"
+                            className="flex items-center px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <FiSettings className="h-5 w-5 mr-3" />
+                            Settings
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             {/* User & Actions */}
@@ -207,7 +281,7 @@ export default function Layout({ children }: LayoutProps) {
                 <>
                   <Link
                     href="/messages"
-                    className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200"
+                    className="hidden sm:flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200"
                     title="Messages"
                   >
                     <FiMessageSquare className="h-5 w-5 mr-1" />
@@ -215,7 +289,7 @@ export default function Layout({ children }: LayoutProps) {
                   </Link>
                   
                   {/* Notifications Dropdown */}
-                  <div className="relative" ref={notificationsRef}>
+                  <div className="relative hidden sm:block" ref={notificationsRef}>
                     <button
                       onClick={() => setNotificationsDropdownOpen(!notificationsDropdownOpen)}
                       className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-indigo-700 transition-colors duration-200 relative"
@@ -304,13 +378,13 @@ export default function Layout({ children }: LayoutProps) {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center space-x-2 bg-indigo-50 px-3 py-1 rounded-full">
+                  <div className="hidden sm:flex items-center space-x-2 bg-indigo-50 px-3 py-1 rounded-full">
                     <div className="w-8 h-8 bg-indigo-200 rounded-full flex items-center justify-center font-bold text-indigo-700">
                       {user.displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <span className="text-sm font-medium text-gray-700 truncate max-w-[120px]">{user.displayName || user.email}</span>
                   </div>
-                  <div className="relative" ref={dropdownRef}>
+                  <div className="relative hidden sm:block" ref={dropdownRef}>
                     <button
                       onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
                       className="flex items-center p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200 rounded-md hover:bg-gray-100"
@@ -363,8 +437,8 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </nav>
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8 min-h-[60vh]">
+      <main className="max-w-4xl mx-auto py-4 sm:py-10 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg sm:rounded-2xl shadow-lg p-4 sm:p-8 min-h-[60vh]">
           {children}
         </div>
       </main>

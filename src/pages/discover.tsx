@@ -266,49 +266,49 @@ export default function DiscoverPage() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="w-full">
         {/* Header */}
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Discover & Connect</h1>
-              <p className="mt-2 text-gray-600">
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 sm:mb-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Discover & Connect</h1>
+              <p className="mt-2 text-sm sm:text-base text-gray-600">
                 Find meaningful connections and explore potential matches
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm text-gray-500">Your Matches</p>
-                <p className="text-2xl font-bold text-indigo-600">{matches.length}</p>
+                <p className="text-xs sm:text-sm text-gray-500">Your Matches</p>
+                <p className="text-xl sm:text-2xl font-bold text-indigo-600">{matches.length}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white shadow rounded-lg mb-8">
+        <div className="bg-white shadow rounded-lg mb-6 sm:mb-8">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
+            <nav className="-mb-px flex flex-wrap space-x-2 sm:space-x-8 px-4 sm:px-6">
               <button
                 onClick={() => setActiveTab('discover')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center whitespace-nowrap ${
                   activeTab === 'discover'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <FiSearch className="inline h-4 w-4 mr-2" />
+                <FiSearch className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
                 Discover
               </button>
               <button
                 onClick={() => setActiveTab('matches')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center whitespace-nowrap ${
                   activeTab === 'matches'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <FiHeart className="inline h-4 w-4 mr-2" />
+                <FiHeart className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
                 Matches ({matches.length})
               </button>
             </nav>

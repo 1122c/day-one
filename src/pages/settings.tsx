@@ -69,9 +69,9 @@ export default function SettingsPage() {
     switch (activeTab) {
       case 'profile':
         return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-gray-900">Profile Settings</h2>
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-0">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 sm:mb-0">Profile Settings</h2>
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className="flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
@@ -88,7 +88,7 @@ export default function SettingsPage() {
             ) : profile ? (
               <div className="space-y-6">
                 {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Name
@@ -735,17 +735,19 @@ export default function SettingsPage() {
 
       case 'privacy':
         return profile ? (
-          <PrivacySettings profile={profile} onUpdate={setProfile} />
+          <div className="p-4 sm:p-6">
+            <PrivacySettings profile={profile} onUpdate={setProfile} />
+          </div>
         ) : (
-          <div className="text-center py-8">
+          <div className="text-center py-8 p-4 sm:p-6">
             <p className="text-gray-500">Profile data needed for privacy settings.</p>
           </div>
         );
 
       case 'notifications':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Notification Settings</h2>
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Notification Settings</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
@@ -785,8 +787,8 @@ export default function SettingsPage() {
 
       case 'preferences':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Preferences</h2>
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Preferences</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -834,30 +836,30 @@ export default function SettingsPage() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="mt-2 text-gray-600">
+      <div className="w-full">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600">
             Manage your account settings, privacy, and preferences.
           </p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200 mb-8">
-          <nav className="-mb-px flex space-x-8">
+        <div className="border-b border-gray-200 mb-6 sm:mb-8">
+          <nav className="-mb-px flex flex-wrap space-x-2 sm:space-x-8">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center ${
+                  className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-indigo-500 text-indigo-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <Icon className="h-4 w-4 mr-2" />
+                  <Icon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   {tab.name}
                 </button>
               );
