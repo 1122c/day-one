@@ -188,7 +188,9 @@ export default function Layout({ children }: LayoutProps) {
                   );
                 })}
               </div>
-              
+            </div>
+            {/* User & Actions */}
+            <div className="flex items-center space-x-4">
               {/* Mobile menu button */}
               <div className="md:hidden" ref={mobileMenuRef}>
                 <button
@@ -208,7 +210,7 @@ export default function Layout({ children }: LayoutProps) {
                 
                 {/* Mobile menu dropdown */}
                 {mobileMenuOpen && (
-                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
                       <h3 className="text-sm font-semibold text-gray-900">Navigation</h3>
                     </div>
@@ -274,9 +276,6 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                 )}
               </div>
-            </div>
-            {/* User & Actions */}
-            <div className="flex items-center space-x-4">
               {!loading && user && (
                 <>
                   <Link
