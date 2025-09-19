@@ -34,7 +34,8 @@ Before you begin, ensure you have the following installed on your system:
    Create a `.env.local` file in the root directory and add the following variables:
 
    ```env
-   # Firebase Configuration
+   # Firebase Configuration (Required for authentication and database)
+   # These are used for user authentication, storing user profiles, and real-time features
    NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
@@ -42,13 +43,15 @@ Before you begin, ensure you have the following installed on your system:
    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-   # OpenAI Configuration (for AI features)
+   # OpenAI Configuration (Required for AI-powered features)
+   # This is used for generating conversation suggestions and matching insights
    OPENAI_API_KEY=your_openai_api_key
-
-   # NextAuth Configuration
-   NEXTAUTH_URL=http://localhost:3000
-   NEXTAUTH_SECRET=your_nextauth_secret
    ```
+
+   **What these API keys are used for:**
+
+   - **Firebase API Keys**: Enable user sign-up, sign-in, password reset, and storing user profiles in the database. Without these, you cannot create accounts or access the app beyond the landing page.
+   - **OpenAI API Key**: Powers the AI features like conversation suggestions, matching insights, and smart recommendations. The app will work without this, but AI features will be disabled.
 
 4. **Run the development server**
 
@@ -67,8 +70,6 @@ Before you begin, ensure you have the following installed on your system:
 ### Option 1: Live Demo (Easiest)
 
 **Perfect for non-technical users and quick previews**
-
-
 
 ### Option 2: Docker (For Consistent Environment)
 
@@ -176,37 +177,59 @@ Before you begin, ensure you have the following installed on your system:
 - **Redux DevTools**: Inspect state management
 - **Lighthouse**: Performance and accessibility testing
 
-## 🔧 Firebase Setup
+## 🔧 Firebase Setup (Required)
 
-WeNetwork uses Firebase for authentication, database, and storage. You'll need to set up a Firebase project:
+WeNetwork uses Firebase for authentication, database, and storage. **You must set up Firebase to use the app** - without it, you'll get "unexpected error occurs" when trying to sign in.
 
 ### 1. Create a Firebase Project
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click "Create a project"
 3. Follow the setup wizard
+4. **Important**: Choose a project name and enable Google Analytics (optional but recommended)
 
 ### 2. Enable Authentication
 
 1. In your Firebase project, go to "Authentication"
 2. Click "Get started"
 3. Go to "Sign-in method" tab
-4. Enable "Email/Password" authentication
+4. **Enable "Email/Password" authentication** (this is required for the app to work)
+5. Optionally enable other providers if desired
 
 ### 3. Create Firestore Database
 
 1. Go to "Firestore Database"
 2. Click "Create database"
-3. Choose "Start in test mode" for beta testing
-4. Select a location for your database
+3. **Choose "Start in test mode"** for beta testing (this allows read/write access for 30 days)
+4. Select a location for your database (choose one close to your users)
 
 ### 4. Get Configuration Keys
 
-1. Go to Project Settings (gear icon)
-2. Scroll down to "Your apps"
-3. Click "Add app" and select Web
-4. Copy the configuration object
-5. Add these values to your `.env.local` file
+1. Go to Project Settings (gear icon in the left sidebar)
+2. Scroll down to "Your apps" section
+3. Click "Add app" and select the Web icon (`</>`)
+4. Register your app with a nickname (e.g., "WeNetwork Web")
+5. **Copy the configuration object** - it will look like this:
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "AIza...",
+     authDomain: "your-project.firebaseapp.com",
+     projectId: "your-project-id",
+     storageBucket: "your-project.appspot.com",
+     messagingSenderId: "123456789",
+     appId: "1:123456789:web:abcdef...",
+   };
+   ```
+6. **Add these values to your `.env.local` file** (see the environment variables section above)
+
+### 5. Test Your Setup
+
+After setting up Firebase and adding the environment variables:
+
+1. Start the development server: `npm run dev`
+2. Go to [http://localhost:3000](http://localhost:3000)
+3. Try to sign up for a new account
+4. If you see "unexpected error occurs", check that all Firebase environment variables are set correctly
 
 ## 🎯 Features
 
@@ -269,30 +292,46 @@ npm start
 
 Make sure to set up the same environment variables in your production environment:
 
-- Firebase configuration
+- Firebase configuration (all NEXT*PUBLIC_FIREBASE*\* variables)
 - OpenAI API key
-- NextAuth secret
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-**1. "Firebase: Error (auth/invalid-api-key)"**
+**1. "An unexpected error occurs" when trying to sign in**
+
+This is the most common issue and usually means Firebase is not properly configured:
+
+- **Check your `.env.local` file exists** in the root directory
+- **Verify all Firebase environment variables are set** (all 6 variables starting with `NEXT_PUBLIC_FIREBASE_`)
+- **Make sure there are no typos** in the variable names or values
+- **Restart your development server** after adding environment variables
+- **Check the browser console** for specific error messages
+
+**2. "Firebase: Error (auth/invalid-api-key)"**
 
 - Ensure your Firebase API key is correct in `.env.local`
 - Check that the key is prefixed with `NEXT_PUBLIC_`
+- Verify the API key is from the correct Firebase project
 
-**2. "Module not found" errors**
+**3. "Firebase: Error (auth/operation-not-allowed)"**
+
+- Go to Firebase Console → Authentication → Sign-in method
+- **Enable "Email/Password" authentication** (this is required)
+
+**4. "Module not found" errors**
 
 - Delete `node_modules` and `package-lock.json`
 - Run `npm install` again
 
-**3. "Firestore permission denied"**
+**5. "Firestore permission denied"**
 
 - Check your Firestore security rules
-- Ensure authentication is properly configured
+- Ensure you started Firestore in "test mode" for development
+- Verify authentication is properly configured
 
-**4. Port already in use**
+**6. Port already in use**
 
 - Kill the process using port 3000: `lsof -ti:3000 | xargs kill -9`
 - Or use a different port: `npm run dev -- -p 3001`
