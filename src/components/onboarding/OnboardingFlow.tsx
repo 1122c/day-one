@@ -35,7 +35,7 @@ const onboardingSchema = z.object({
       })
     )
     .optional()
-    .transform((profiles) => 
+    .transform((profiles) =>
       profiles?.filter(profile => profile.username && profile.username.trim().length > 0) || []
     ),
 });
@@ -59,6 +59,39 @@ const coreValuesOptions = [
   'Stability',
   'Excellence',
   'Compassion',
+  'Integrity',
+  'Respect',
+  'Trust',
+  'Kindness',
+  'Optimism',
+  'Resilience',
+  'Curiosity',
+  'Independence',
+  'Family',
+  'Freedom',
+  'Justice',
+  'Equality',
+  'Sustainability',
+  'Wellness',
+  'Spirituality',
+  'Ambition',
+  'Discipline',
+  'Patience',
+  'Humility',
+  'Gratitude',
+  'Loyalty',
+  'Courage',
+  'Wisdom',
+  'Passion',
+  'Service',
+  'Tradition',
+  'Progress',
+  'Harmony',
+  'Simplicity',
+  'Achievement',
+  'Security',
+  'Fun',
+  'Romance',
 ];
 
 const personalGoalsOptions = [
@@ -332,9 +365,9 @@ export default function OnboardingFlow() {
         updatedAt: new Date(),
       };
 
-              await updateUserProfile(user.uid, userProfile);
+      await updateUserProfile(user.uid, userProfile);
       setSubmitSuccess(true);
-      
+
       // Redirect to home page after a short delay
       setTimeout(() => {
         router.push('/');
@@ -360,7 +393,7 @@ export default function OnboardingFlow() {
         preferredTimes: reviewData.values?.availability?.preferredTimes || [],
         socialProfiles: reviewData.socialProfiles || [],
       };
-      
+
       await onSubmit(formData);
     }
   };
@@ -385,7 +418,7 @@ export default function OnboardingFlow() {
                 <p className="mt-2 text-sm text-red-600">{errors.name.message}</p>
               )}
             </div>
-            
+
             <div>
               <label htmlFor="age" className="block text-sm font-medium text-gray-700">
                 Age (Optional)
@@ -691,7 +724,7 @@ export default function OnboardingFlow() {
               <p className="text-sm text-gray-600 mb-6">
                 Add your social profiles to help others connect with you.
               </p>
-              
+
               <div className="space-y-6">
                 {fields.map((field, index) => (
                   <div key={field.id} className="relative">
@@ -808,7 +841,7 @@ export default function OnboardingFlow() {
               <p className="text-sm text-gray-600 mb-6">
                 Add your social profiles to help others connect with you.
               </p>
-              
+
               <div className="space-y-6">
                 {fields.map((field, index) => (
                   <div key={field.id} className="relative">
@@ -964,24 +997,21 @@ export default function OnboardingFlow() {
               {[1, 2, 3, 4, 5, 6, 7].map((s) => (
                 <div
                   key={s}
-                  className={`flex items-center ${
-                    s !== 7 ? 'flex-1' : ''
-                  }`}
+                  className={`flex items-center ${s !== 7 ? 'flex-1' : ''
+                    }`}
                 >
                   <div
-                    className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                      s <= step
+                    className={`flex items-center justify-center w-8 h-8 rounded-full ${s <= step
                         ? 'bg-indigo-600 text-white'
                         : 'bg-gray-200 text-gray-600'
-                    }`}
+                      }`}
                   >
                     {s}
                   </div>
                   {s !== 7 && (
                     <div
-                      className={`flex-1 h-1 mx-4 ${
-                        s < step ? 'bg-indigo-600' : 'bg-gray-200'
-                      }`}
+                      className={`flex-1 h-1 mx-4 ${s < step ? 'bg-indigo-600' : 'bg-gray-200'
+                        }`}
                     />
                   )}
                 </div>
