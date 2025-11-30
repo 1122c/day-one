@@ -932,48 +932,380 @@ If you've tried the troubleshooting steps and nothing works:
 
 ---
 
-## 🌐 Deployment Options (For Making App Publicly Accessible)
+## 🌐 Deployment Guide (Making App Accessible to Beta Testers)
 
-If you want to make the app accessible to beta testers who aren't on your local network, you need to deploy it. Here are the easiest options:
+**Why deploy?** When you run the app locally with `npm run dev`, only people on your computer (or your local WiFi network) can access it. To let beta testers from anywhere use the app, you need to deploy it to the internet.
 
-### Option 1: Vercel (Recommended - Easiest)
+**What deployment means:** It's like publishing your app online so anyone with the URL can access it, similar to how a website works.
 
-**What it is:** Vercel is a platform specifically designed for Next.js apps. It's free for personal projects.
+---
 
-**Steps:**
-1. Create account at [vercel.com](https://vercel.com)
-2. Install Vercel CLI: `npm install -g vercel`
-3. In your project folder, run: `vercel`
-4. Follow the prompts (use default settings)
-5. Add your environment variables in Vercel dashboard
-6. Deploy: `vercel --prod`
+### Option 1: Vercel (Recommended - Easiest for Next.js)
 
-**Pros:** Free, easy, automatic HTTPS, works great with Next.js
-**Cons:** None really for beta testing
+**What it is:** Vercel is a hosting platform specifically designed for Next.js apps. It's free for personal/small projects and handles all the technical stuff automatically.
 
-### Option 2: Netlify
+**Cost:** Free for beta testing (free tier is generous enough for most beta programs)
 
-**Steps:**
-1. Create account at [netlify.com](https://netlify.com)
-2. Connect your GitHub repository (or drag and drop your project folder)
-3. Set build command: `npm run build`
-4. Set publish directory: `.next`
-5. Add environment variables in Netlify dashboard
-6. Deploy
+**Time needed:** 15-30 minutes
 
-**Pros:** Free, easy, good documentation
-**Cons:** Slightly more setup than Vercel for Next.js
+#### Step-by-Step Vercel Deployment
 
-### Option 3: Railway / Render
+##### Part 1: Create a Vercel Account
 
-**Steps:**
-1. Create account at [railway.app](https://railway.app) or [render.com](https://render.com)
-2. Connect your GitHub repository
-3. Add environment variables
-4. Deploy
+1. **Go to Vercel**: [https://vercel.com](https://vercel.com)
 
-**Pros:** Free tiers available, good for full-stack apps
-**Cons:** May require more configuration
+2. **Click "Sign Up"** (top right corner)
+
+3. **Sign up with GitHub** (recommended - easiest):
+   - Click "Continue with GitHub"
+   - Authorize Vercel to access your GitHub account
+   - This allows Vercel to automatically deploy when you update your code
+
+4. **OR sign up with email**:
+   - Enter your email and create a password
+   - Verify your email address
+
+##### Part 2: Install Vercel CLI (Command Line Tool)
+
+1. **Open Terminal/Command Prompt**
+
+2. **Install Vercel CLI globally** (this installs it on your computer, not just this project):
+   ```bash
+   npm install -g vercel
+   ```
+
+3. **Verify installation**:
+   ```bash
+   vercel --version
+   ```
+   You should see a version number like `32.0.0` or similar ✅
+
+##### Part 3: Deploy Your Project
+
+1. **Navigate to your project folder**:
+   ```bash
+   cd day-one
+   ```
+
+2. **Make sure your code is ready**:
+   - Your `.env.local` file should be set up (you'll add these values to Vercel separately)
+   - Test that the app runs locally first (`npm run dev` should work)
+
+3. **Log in to Vercel from the command line**:
+   ```bash
+   vercel login
+   ```
+   - It will open a browser window
+   - Click "Authorize" or "Continue" in the browser
+   - Return to Terminal - you should see "Success! Logged in as [your-email]"
+
+4. **Deploy your project**:
+   ```bash
+   vercel
+   ```
+
+5. **Follow the prompts** (answer these questions):
+   - **"Set up and deploy?"** → Type `Y` and press Enter
+   - **"Which scope?"** → Press Enter (use default - your account)
+   - **"Link to existing project?"** → Type `N` and press Enter (first time)
+   - **"What's your project's name?"** → Press Enter (or type a name like "wenetwork-beta")
+   - **"In which directory is your code located?"** → Press Enter (current directory `.` is correct)
+   - **"Want to override the settings?"** → Type `N` and press Enter
+
+6. **Wait for deployment** - this takes 1-3 minutes. You'll see:
+   ```
+   > Building...
+   > Deployment complete!
+   ```
+
+7. **Copy your deployment URL** - you'll see something like:
+   ```
+   🔗  https://wenetwork-beta.vercel.app
+   ```
+   **Save this URL!** This is where your app is now live.
+
+##### Part 4: Add Environment Variables to Vercel
+
+**Important:** Your `.env.local` file is not automatically uploaded (for security). You need to add your API keys to Vercel separately.
+
+1. **Go to Vercel Dashboard**: [https://vercel.com/dashboard](https://vercel.com/dashboard)
+
+2. **Click on your project** (the name you chose, like "wenetwork-beta")
+
+3. **Go to Settings**:
+   - Click the "Settings" tab at the top
+   - Click "Environment Variables" in the left sidebar
+
+4. **Add each environment variable one by one**:
+
+   For each variable, click "Add New" and enter:
+   
+   **Firebase Variables:**
+   - **Name**: `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - **Value**: (paste your Firebase API key from `.env.local`)
+   - **Environment**: Select "Production", "Preview", and "Development" (or just "Production" for now)
+   - Click "Save"
+   
+   - **Name**: `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+   - **Value**: (paste from `.env.local`)
+   - **Environment**: Select all three
+   - Click "Save"
+   
+   - **Name**: `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+   - **Value**: (paste from `.env.local`)
+   - **Environment**: Select all three
+   - Click "Save"
+   
+   - **Name**: `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+   - **Value**: (paste from `.env.local`)
+   - **Environment**: Select all three
+   - Click "Save"
+   
+   - **Name**: `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+   - **Value**: (paste from `.env.local`)
+   - **Environment**: Select all three
+   - Click "Save"
+   
+   - **Name**: `NEXT_PUBLIC_FIREBASE_APP_ID`
+   - **Value**: (paste from `.env.local`)
+   - **Environment**: Select all three
+   - Click "Save"
+
+   **OpenAI Variable (if using):**
+   - **Name**: `OPENAI_API_KEY`
+   - **Value**: (paste from `.env.local`)
+   - **Environment**: Select all three
+   - Click "Save"
+
+5. **Redeploy with the new environment variables**:
+   - Go to the "Deployments" tab
+   - Click the three dots (`...`) next to your latest deployment
+   - Click "Redeploy"
+   - This rebuilds the app with your environment variables
+
+##### Part 5: Test Your Deployed App
+
+1. **Visit your deployment URL** (the one you saved, like `https://wenetwork-beta.vercel.app`)
+
+2. **Test the app**:
+   - Try signing up for a new account
+   - Try logging in
+   - Test key features
+   - Make sure everything works as expected
+
+3. **If something doesn't work**:
+   - Check that all environment variables were added correctly
+   - Make sure you redeployed after adding variables
+   - Check the browser console for errors (F12)
+   - See Troubleshooting section below
+
+##### Part 6: Share with Beta Testers
+
+1. **Give testers your deployment URL**: `https://wenetwork-beta.vercel.app` (or whatever your URL is)
+
+2. **They can access it from anywhere** - phone, tablet, different computers, different locations
+
+3. **The app is automatically secure** - Vercel provides HTTPS (the padlock icon) for free
+
+#### Updating Your Deployed App
+
+**When you make changes or update code:**
+
+1. **If connected to GitHub** (automatic deployment):
+   - Push changes to GitHub: `git push`
+   - Vercel automatically redeploys - wait 1-3 minutes
+   - Your app updates automatically
+
+2. **If not connected to GitHub** (manual deployment):
+   - Make your changes locally
+   - Run: `vercel --prod` (this deploys to production)
+   - Wait for deployment to complete
+
+#### Vercel Troubleshooting
+
+**Problem: "Build failed"**
+- Check that all environment variables are set
+- Make sure your code runs locally first (`npm run dev` works)
+- Check the "Build Logs" in Vercel dashboard for specific errors
+
+**Problem: "Environment variables not working"**
+- Make sure you added them in the Vercel dashboard
+- Make sure you redeployed after adding them
+- Check for typos in variable names (they're case-sensitive)
+- Make sure you selected the right environment (Production, Preview, Development)
+
+**Problem: "Can't log in"**
+- Most likely missing or incorrect Firebase environment variables
+- Double-check all Firebase variables in Vercel dashboard
+- Make sure Firebase Authentication is enabled in Firebase Console
+
+**Problem: "App works locally but not on Vercel"**
+- Environment variables are likely missing
+- Check that all variables from `.env.local` are in Vercel dashboard
+- Verify Firebase project settings are correct
+
+---
+
+### Option 2: Netlify (Alternative - Also Easy)
+
+**What it is:** Another free hosting platform that works well with Next.js.
+
+**Cost:** Free for beta testing
+
+**Time needed:** 20-30 minutes
+
+#### Step-by-Step Netlify Deployment
+
+##### Part 1: Create a Netlify Account
+
+1. **Go to Netlify**: [https://netlify.com](https://netlify.com)
+
+2. **Click "Sign up"**
+
+3. **Sign up with GitHub** (recommended):
+   - Click "Sign up with GitHub"
+   - Authorize Netlify
+
+##### Part 2: Deploy from GitHub (Easiest Method)
+
+**Prerequisite:** Your code must be in a GitHub repository.
+
+1. **In Netlify Dashboard**, click "Add new site" → "Import an existing project"
+
+2. **Choose "GitHub"** as your Git provider
+
+3. **Authorize Netlify** to access your repositories (if prompted)
+
+4. **Select your repository** (day-one or whatever it's named)
+
+5. **Configure build settings**:
+   - **Build command**: `npm run build`
+   - **Publish directory**: `.next`
+   - **Base directory**: (leave empty unless your Next.js app is in a subfolder)
+
+6. **Click "Deploy site"**
+
+7. **Wait for deployment** (2-5 minutes)
+
+8. **You'll get a URL** like: `https://random-name-123.netlify.app`
+
+##### Part 3: Add Environment Variables to Netlify
+
+1. **In your site dashboard**, go to **Site settings** → **Environment variables**
+
+2. **Add each variable** (same as Vercel):
+   - Click "Add a variable"
+   - Enter name and value
+   - Click "Save"
+
+3. **Add all Firebase and OpenAI variables** (same list as Vercel)
+
+4. **Trigger a new deploy**:
+   - Go to "Deploys" tab
+   - Click "Trigger deploy" → "Clear cache and deploy site"
+
+##### Part 4: Configure Next.js for Netlify
+
+**Important:** Netlify needs a special configuration file for Next.js.
+
+1. **Create a file** named `netlify.toml` in your project root folder:
+
+2. **Add this content**:
+   ```toml
+   [build]
+     command = "npm run build"
+     publish = ".next"
+
+   [[plugins]]
+     package = "@netlify/plugin-nextjs"
+   ```
+
+3. **Install the Netlify Next.js plugin**:
+   ```bash
+   npm install --save-dev @netlify/plugin-nextjs
+   ```
+
+4. **Commit and push** to GitHub, or redeploy manually
+
+**Pros:** Free, easy, automatic HTTPS
+**Cons:** Requires more configuration than Vercel for Next.js
+
+---
+
+### Option 3: Manual Deployment via GitHub + Vercel (Recommended for Non-Technical Users)
+
+**Best approach if you're not comfortable with command line:**
+
+1. **Push your code to GitHub** (if not already there):
+   ```bash
+   git add .
+   git commit -m "Initial commit"
+   git push origin main
+   ```
+
+2. **Go to Vercel**: [https://vercel.com](https://vercel.com)
+
+3. **Click "Add New Project"**
+
+4. **Import your GitHub repository**:
+   - Find your repository in the list
+   - Click "Import"
+
+5. **Configure project**:
+   - Project name: (auto-filled, or change it)
+   - Framework Preset: Next.js (should be auto-detected)
+   - Root Directory: `./` (default)
+   - Build Command: `npm run build` (default)
+   - Output Directory: `.next` (default)
+   - Install Command: `npm install` (default)
+
+6. **Add environment variables**:
+   - Scroll down to "Environment Variables"
+   - Add all your Firebase and OpenAI variables (same as in Part 4 above)
+
+7. **Click "Deploy"**
+
+8. **Wait for deployment** (2-3 minutes)
+
+9. **Get your URL** - Vercel will show it when deployment completes
+
+**Pros:** No command line needed, automatic deployments when you push to GitHub
+**Cons:** Requires GitHub account and repository
+
+---
+
+### Which Deployment Option Should You Choose?
+
+- **Choose Vercel + GitHub** if: You want the easiest experience and automatic updates
+- **Choose Vercel CLI** if: You're comfortable with command line and want more control
+- **Choose Netlify** if: You prefer Netlify's interface or already use it
+
+**For most non-technical beta testers, we recommend: Vercel + GitHub (Option 3)**
+
+---
+
+### After Deployment: What to Do
+
+1. **Test the deployed app** thoroughly before sharing with testers
+
+2. **Monitor the deployment**:
+   - Check Vercel/Netlify dashboard regularly
+   - Look for failed deployments
+   - Monitor any error logs
+
+3. **Set up a custom domain** (optional):
+   - You can use your own domain (e.g., `beta.wenetwork.com`)
+   - Vercel/Netlify provide instructions in their dashboards
+   - This is optional - the provided URLs work fine for beta testing
+
+4. **Keep environment variables updated**:
+   - If you change Firebase or OpenAI keys, update them in the deployment platform
+   - Redeploy after updating environment variables
+
+5. **Monitor costs**:
+   - Vercel and Netlify free tiers are generous
+   - You shouldn't hit limits with beta testing
+   - But monitor usage in their dashboards just in case
 
 ---
 
